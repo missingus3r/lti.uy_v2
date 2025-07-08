@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+        }
+        
+        .header .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            padding: 0.5rem 1.5rem;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        
+        .header .logout-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+        
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .filters h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .logs-table {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .logs-table h2 {
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+            font-size: 1.25rem;
+            color: #2c3e50;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.875rem;
+            border-bottom: 2px solid #eee;
+        }
+        
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #eee;
+            font-size: 0.875rem;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .type-pageVisit {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .type-loginSuccess {
+            background-color: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .type-loginFailure {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .type-dataUpdate {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+        }
+        
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            background-color: #f8f9fa;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination .page-info {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+        }
+        
+        .tabs {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            margin-bottom: -2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 2rem;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .users-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .user-card {
+            border: 1px solid #eee;
+            padding: 1rem;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-info h4 {
+            margin-bottom: 0.25rem;
+            color: #2c3e50;
+        }
+        
+        .user-info p {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .user-stats {
+            text-align: right;
+        }
+        
+        .user-stats .credits {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #3498db;
+        }
+        
+        .user-stats .last-update {
+            font-size: 0.75rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Dashboard Administrador - LTI.UY</h1>
+        <a href="/admin/logout" class="logout-btn">Cerrar Sesión</a>
+    </header>
+    
+    <div class="container">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Visitas Totales</h3>
+                <div class="number"><%= stats.totalVisits %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Visitas Hoy</h3>
+                <div class="number"><%= stats.todayVisits %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Logins Exitosos</h3>
+                <div class="number"><%= stats.totalLogins %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Logins Fallidos</h3>
+                <div class="number"><%= stats.failedLogins %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Visitantes Únicos</h3>
+                <div class="number"><%= stats.uniqueVisitors %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Usuarios Registrados</h3>
+                <div class="number"><%= stats.totalUsers %></div>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('logs')">Logs de Actividad</button>
+                <button class="tab-btn" onclick="switchTab('users')">Usuarios</button>
+            </div>
+            
+            <!-- Logs Tab -->
+            <div id="logs-tab" class="tab-content active">
+                <!-- Filters -->
+                <div class="filters">
+                    <h2>Filtros</h2>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="type-filter">Tipo de Evento</label>
+                            <select id="type-filter">
+                                <option value="">Todos</option>
+                                <option value="pageVisit">Visitas a Páginas</option>
+                                <option value="loginSuccess">Logins Exitosos</option>
+                                <option value="loginFailure">Logins Fallidos</option>
+                                <option value="dataUpdate">Actualizaciones de Datos</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="username-filter">Usuario</label>
+                            <input type="text" id="username-filter" placeholder="Buscar por usuario...">
+                        </div>
+                        <div class="filter-group">
+                            <label for="start-date">Fecha Inicio</label>
+                            <input type="date" id="start-date">
+                        </div>
+                        <div class="filter-group">
+                            <label for="end-date">Fecha Fin</label>
+                            <input type="date" id="end-date">
+                        </div>
+                        <button class="btn btn-primary" onclick="applyFilters()">Aplicar Filtros</button>
+                    </div>
+                </div>
+                
+                <!-- Logs Table -->
+                <div class="logs-table">
+                    <h2>Registro de Actividad</h2>
+                    <div id="logs-container">
+                        <div class="loading">Cargando logs...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Users Tab -->
+            <div id="users-tab" class="tab-content">
+                <div class="users-container">
+                    <div class="loading">Cargando usuarios...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tab === 'logs') {
+                document.querySelector('.tab-btn').classList.add('active');
+                document.getElementById('logs-tab').classList.add('active');
+                if (!document.querySelector('#logs-table')) {
+                    loadLogs();
+                }
+            } else if (tab === 'users') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('users-tab').classList.add('active');
+                loadUsers();
+            }
+        }
+        
+        // Load logs
+        async function loadLogs(page = 1) {
+            try {
+                const filters = {
+                    type: document.getElementById('type-filter').value,
+                    username: document.getElementById('username-filter').value,
+                    startDate: document.getElementById('start-date').value,
+                    endDate: document.getElementById('end-date').value,
+                    page: page
+                };
+                
+                const queryString = new URLSearchParams(filters).toString();
+                const response = await fetch(`/admin/api/logs?${queryString}`);
+                const data = await response.json();
+                
+                currentPage = data.page;
+                totalPages = data.pages;
+                
+                renderLogs(data.logs);
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logs-container').innerHTML = '<div class="empty-state">Error al cargar logs</div>';
+            }
+        }
+        
+        // Render logs table
+        function renderLogs(logs) {
+            if (logs.length === 0) {
+                document.getElementById('logs-container').innerHTML = '<div class="empty-state">No se encontraron logs</div>';
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Tipo</th>
+                            <th>Usuario</th>
+                            <th>IP</th>
+                            <th>Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            logs.forEach(log => {
+                const date = new Date(log.timestamp);
+                const formattedDate = date.toLocaleString('es-UY');
+                const typeBadgeClass = `type-${log.type}`;
+                const typeText = {
+                    'pageVisit': 'Visita',
+                    'loginSuccess': 'Login Exitoso',
+                    'loginFailure': 'Login Fallido',
+                    'dataUpdate': 'Actualización'
+                }[log.type] || log.type;
+                
+                html += `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td><span class="type-badge ${typeBadgeClass}">${typeText}</span></td>
+                        <td>${log.username || '-'}</td>
+                        <td>${log.ip}</td>
+                        <td>${log.details || log.page || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button onclick="loadLogs(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
+                    <span class="page-info">Página ${currentPage} de ${totalPages}</span>
+                    <button onclick="loadLogs(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente</button>
+                </div>
+            `;
+            
+            document.getElementById('logs-container').innerHTML = html;
+        }
+        
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch('/admin/api/users');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderUsers(data.users);
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.querySelector('.users-container').innerHTML = '<div class="empty-state">Error al cargar usuarios</div>';
+            }
+        }
+        
+        // Render users
+        function renderUsers(users) {
+            if (users.length === 0) {
+                document.querySelector('.users-container').innerHTML = '<div class="empty-state">No hay usuarios registrados</div>';
+                return;
+            }
+            
+            let html = '<div class="users-grid">';
+            
+            users.forEach(user => {
+                const lastUpdate = user.lastDataFetch ? new Date(user.lastDataFetch).toLocaleDateString('es-UY') : 'Nunca';
+                const credits = user.academicProgress ? `${user.academicProgress.totalCredits}/${user.academicProgress.requiredCredits}` : '0/0';
+                const progressLastUpdate = user.academicProgress?.lastUpdated ? 
+                    new Date(user.academicProgress.lastUpdated).toLocaleDateString('es-UY') : 'Sin datos';
+                
+                html += `
+                    <div class="user-card">
+                        <div class="user-info">
+                            <h4>${user.username}</h4>
+                            <p>Hash: ${user.userHash}</p>
+                            <p>Última actualización: ${lastUpdate}</p>
+                            <p>Actualizaciones manuales hoy: ${user.manualRefreshCount}/2</p>
+                        </div>
+                        <div class="user-stats">
+                            <div class="credits">${credits}</div>
+                            <div class="last-update">Progreso: ${progressLastUpdate}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            document.querySelector('.users-container').innerHTML = html;
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            loadLogs(1);
+        }
+        
+        // Load logs on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadLogs();
+        });
+    </script>
+</body>
+</html>

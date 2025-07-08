@@ -1,0 +1,74 @@
+Semestre,Asignatura,Créditos
+1,Introducción y Perspectivas de las TI,2
+1,Fundamentos e Introducción a la Programación,10
+1,Metodologías de Testing Funcional,5
+1,Análisis de Requerimientos,6
+1,"Base de Datos, Conceptos y Diseño",6
+1,Proyecto S1 / Caso Estudio,6
+1,Vinculación con el Medio Empresarial 1,4
+1,Inglés 1,4
+1,Utec Innova 1,2
+2,Implementación de Testing Funcional,5
+2,Programación SQL,8
+2,Algoritmos y Patrones de Diseño,10
+2,"Fundamentos de Arquitectura, Seguridad y Cloud",7
+2,Proyecto S2 / Proyecto de Desarrollo,7
+2,Vinculación con el Medio Empresarial 2,2
+2,Inglés 2,4
+2,Utec Innova 2,2
+3,Redes Infraestructura e Interconexión,12
+3,Gestión de Ingeniería de Software,5
+3,Programación Backend,7
+3,Metodologías de Desarrollo,3
+3,Diseño Experiencia Usuario,3
+3,Proyecto S3 / Proyecto Desarrollo e Infraestructura,5
+3,Vinculación con el Medio Empresarial 3,2
+3,Inglés 3,4
+3,Utec Innova 3,2
+3,Optativa 1,2
+4,Sistemas Operativos de Red y Virtualización,9
+4,Seguridad y Auditoría de Redes,6
+4,Programación Frontend,7
+4,Datawarehousing,4
+4,Proyecto S4 / Proyecto Final Tecnicatura,9
+4,Vinculación con el Medio Empresarial 4,2
+4,Inglés 4,4
+4,Utec Innova 4,2
+4,Optativa 2,2
+5,Gestión de Proyectos,5
+5,Programación de Dispositivos Móviles,6
+5,Base de Datos No Relacionales,6
+5,Automatización de Testing,5
+5,Gestión de la Calidad,4
+5,Data Science,7
+5,Derecho Informático y Normativa Asociada,2
+5,Vinculación con el Medio Empresarial 5,2
+5,Inglés 5,4
+5,Utec Innova 5,2
+5,Optativa 3,2
+6,Programación Funcional,5
+6,Arquitectura y Modelos de Cloud Computing,11
+6,Ciberseguridad en Ambientes Cloud,6
+6,Inteligencia Artificial Aplicada,7
+6,"Ética, Tecnología y Sociedad",2
+6,Testing de Performance,4
+6,Vinculación con el Medio Empresarial 6,2
+6,Inglés 6,4
+6,Utec Innova 6,2
+6,Optativa 4,2
+7,Introducción a Devops,7
+7,Fundamentos de Robótica y Sistemas Autónomos,6
+7,Anteproyecto,5
+7,Gestión de la Ciberseguridad,12
+7,Taller de Ciberseguridad,5
+7,Vinculación con el Medio Empresarial 7,2
+7,Inglés 7,4
+7,Utec Innova 7,2
+7,Optativa 5,2
+8,Taller Devops,8
+8,Preparación para Proyecto Final,2
+8,Proyecto Final Licenciatura,25
+8,Vinculación con el Medio Empresarial 8,2
+8,Inglés 8,4
+8,Utec Innova 8,2
+8,Optativa 6,2

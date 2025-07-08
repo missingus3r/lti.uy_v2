@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>LTI.UY - Plataforma para estudiantes LTI de UTEC | Seguimiento Académico</title>
+    <meta name="title" content="LTI.UY - Plataforma para estudiantes LTI de UTEC | Seguimiento Académico">
+    <meta name="description" content="Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC. Seguimiento de progreso académico, recursos útiles y servicios para sedes de Durazno y Fray Bentos.">
+    <meta name="keywords" content="LTI, UTEC, Licenciatura Tecnologías Información, estudiantes Uruguay, progreso académico, Durazno, Fray Bentos, universidad tecnológica">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Spanish">
+    <meta name="author" content="Bruno Silveira, José Faller, Mariano Collazo">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lti.uy/">
+    <meta property="og:title" content="LTI.UY - Plataforma para estudiantes LTI de UTEC">
+    <meta property="og:description" content="Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC. Seguimiento de progreso académico y recursos útiles.">
+    <meta property="og:image" content="https://lti.uy/images/lti-uy-preview.png">
+    <meta property="og:site_name" content="LTI.UY">
+    <meta property="og:locale" content="es_UY">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://lti.uy/">
+    <meta property="twitter:title" content="LTI.UY - Plataforma para estudiantes LTI de UTEC">
+    <meta property="twitter:description" content="Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC.">
+    <meta property="twitter:image" content="https://lti.uy/images/lti-uy-preview.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://lti.uy/">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://portal.utec.edu.uy">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="/css/styles.css">
+    
+    <!-- Performance optimizations -->
+    <link rel="dns-prefetch" href="//utec.edu.uy">
+    <link rel="dns-prefetch" href="//portal.utec.edu.uy">
+    <link rel="dns-prefetch" href="//ev1.utec.edu.uy">
+    
+    <!-- Sitemap -->
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "LTI.UY",
+        "description": "Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC",
+        "url": "https://lti.uy",
+        "creator": {
+            "@type": "Organization",
+            "name": "Estudiantes LTI UTEC",
+            "member": [
+                {"@type": "Person", "name": "Bruno Silveira"},
+                {"@type": "Person", "name": "José Faller"},
+                {"@type": "Person", "name": "Mariano Collazo"}
+            ]
+        },
+        "about": {
+            "@type": "EducationalOrganization",
+            "name": "UTEC - Universidad Tecnológica",
+            "url": "https://utec.edu.uy"
+        },
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://lti.uy/login",
+            "name": "Acceder a la plataforma"
+        }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "¿Cómo me matriculo a las materias?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Video explicativo disponible en la plataforma (matriculas.mp4)"
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "¿Este sitio pertenece a la UTEC?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "No, este proyecto es realizado por estudiantes recibidos de la UTEC, para estudiantes de la UTEC. Creado por los Licenciados en Tecnologías de la Información Bruno Silveira, José Faller y Mariano Collazo como proyecto final de carrera."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "¿Cuáles son los requisitos para titular?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "La solicitud de diplomas se realiza en mayo y noviembre. Requisitos: verificar créditos y materias aprobadas, certificado de inglés, cédula vigente y carné de salud."
+                }
+            }
+        ]
+    }
+    </script>
+</head>
+<body>
+    <nav class="navbar" role="navigation" aria-label="Navegación principal">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="/" class="navbar-brand" aria-label="Ir a inicio de LTI.UY">
+                <img src="/images/utec-logo.png" alt="UTEC Logo" class="navbar-logo">
+                LTI.UY
+            </a>
+            
+            <!-- Mobile hamburger button -->
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" style="display: none;" aria-label="Abrir menú de navegación" aria-expanded="false">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <!-- Navigation links -->
+            <div class="nav-links" id="navLinks" role="menu">
+                <a href="#features" onclick="closeMobileMenu()" role="menuitem">Características</a>
+                <a href="#utec-sites" onclick="closeMobileMenu()" role="menuitem">Sitios UTEC</a>
+                <a href="#requirements" onclick="closeMobileMenu()" role="menuitem">Requerimientos</a>
+                <a href="#services" onclick="closeMobileMenu()" role="menuitem">Servicios</a>
+                <a href="#faq" onclick="closeMobileMenu()" role="menuitem">FAQ</a>
+                <a href="/login" class="btn btn-primary nav-login-btn" onclick="closeMobileMenu()" role="menuitem" title="Acceder a tu cuenta de estudiante">Iniciar Sesión</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero hero-bg">
+            <div class="container">
+                <header>
+                    <h1>Bienvenido a LTI.UY</h1>
+                    <p>Tu plataforma centralizada para acceder a toda la información de la carrera LTI en UTEC</p>
+                    <br>
+                </header>
+            </div>
+        </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <header>
+                <h2 style="text-align: center; color: var(--utec-primary); margin-bottom: 20px;">
+                    ¿Qué puedes encontrar en LTI.UY?
+                </h2>
+            </header>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🏨</div>
+                    <h3>Información de Servicios</h3>
+                    <p>Encuentra hoteles, taxis y servicios útiles en las sedes de Durazno y Fray Bentos para tus visitas presenciales.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Seguimiento de Progreso</h3>
+                    <p>Visualiza tu avance en la carrera y mantén un registro de tus calificaciones y créditos.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Acceso Seguro</h3>
+                    <p>Utiliza tus credenciales de UTEC para acceder. No almacenamos ningún dato personal.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="utec-sites" class="utec-sites utec-sites-bg">
+        <div class="container">
+            <header>
+                <h2 style="text-align: center; color: var(--utec-primary); margin-bottom: 30px;">
+                    Sitios de UTEC Relevantes
+                </h2>
+            </header>
+            <div class="sites-grid">
+                <div class="site-card">
+                    <div class="site-header">
+                        <img src="/images/portal-academico.png" alt="Portal Académico" class="site-icon">
+                        <h3>Portal Académico</h3>
+                    </div>
+                    <p>Accede a tu información académica oficial</p>
+                    <div class="site-links">
+                        <a href="https://portal.utec.edu.uy" target="_blank" rel="noopener">Portal Principal</a>
+                        <a href="https://portaluxxi.utec.edu.uy" target="_blank" rel="noopener">Portal UXXi</a>
+                        <a href="https://apps.utec.edu.uy/jsloader/ac/matricula#/acceso/bienvenida" target="_blank" rel="noopener">Matrículas</a>
+                    </div>
+                </div>
+                <div class="site-card">
+                    <div class="site-header">
+                        <img src="/images/eva.png" alt="EVA/Moodle" class="site-icon">
+                        <h3>Plataformas de Aprendizaje</h3>
+                    </div>
+                    <p>Recursos educativos y entornos virtuales</p>
+                    <div class="site-links">
+                        <a href="https://ev1.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/eva.png" alt="EVA" class="link-icon">
+                            EVA/Moodle
+                        </a>
+                        <a href="https://edu.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/edu.png" alt="EDU" class="link-icon">
+                            EDU
+                        </a>
+                        <a href="https://airtable.com/shrm963356m0de6lj/tblUnEnOv4jH2Ovgk" target="_blank" rel="noopener">
+                            <img src="/images/edu-air-table.png" alt="AirTable" class="link-icon">
+                            Inscripción APEs
+                        </a>
+                        <a href="https://taa.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/taa.png" alt="TAA" class="link-icon">
+                            TAA
+                        </a>
+                        <a href="https://scaleup.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/scaleup.png" alt="Scale Up" class="link-icon">
+                            Aulas Scale Up
+                        </a>
+                    </div>
+                </div>
+                <div class="site-card">
+                    <div class="site-header">
+                        <img src="/images/pwm.png" alt="PWM" class="site-icon">
+                        <h3>Herramientas Académicas</h3>
+                    </div>
+                    <p>Gestión de cuenta y recursos digitales</p>
+                    <div class="site-links">
+                        <a href="https://pwm.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/pwm.png" alt="PWM" class="link-icon">
+                            Gestión de Cuenta
+                        </a>
+                        <a href="https://red.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/red.png" alt="Red" class="link-icon">
+                            Recursos Digitales
+                        </a>
+                    </div>
+                </div>
+                <div class="site-card">
+                    <div class="site-header">
+                        <img src="/images/mda.png" alt="Mesa de Ayuda" class="site-icon">
+                        <h3>Soporte y Servicios</h3>
+                    </div>
+                    <p>Ayuda técnica y servicios estudiantiles</p>
+                    <div class="site-links">
+                        <a href="https://mds.utec.edu.uy" target="_blank" rel="noopener">Mesa de Servicio</a>
+                        <a href="https://mda.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/mda.png" alt="MDA" class="link-icon">
+                            Mesa de Ayuda
+                        </a>
+                        <a href="https://erp.utec.edu.uy/jobs" target="_blank" rel="noopener">
+                            <img src="/images/erp.png" alt="ERP" class="link-icon">
+                            Ofertas Laborales
+                        </a>
+                        <a href="https://utec.netlanguages.com/utec/login.php" target="_blank" rel="noopener">Net Languages</a>
+                    </div>
+                </div>
+                <div class="site-card">
+                    <div class="site-header">
+                        <img src="/images/git.png" alt="Git UTEC" class="site-icon">
+                        <h3>Desarrollo y Tecnología</h3>
+                    </div>
+                    <p>Plataformas de desarrollo y testing</p>
+                    <div class="site-links">
+                        <a href="https://git.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/git.png" alt="Git" class="link-icon">
+                            Git UTEC
+                        </a>
+                        <a href="https://aichallenge.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/ai-challenge.png" alt="AI Challenge" class="link-icon">
+                            AI Challenge
+                        </a>
+                        <a href="https://mantis.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/mantis.png" alt="Mantis" class="link-icon">
+                            Mantis Bug Tracker
+                        </a>
+                        <a href="https://testlink.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/testlink.png" alt="TestLink" class="link-icon">
+                            Testlink
+                        </a>
+                    </div>
+                </div>
+                <div class="site-card">
+                    <div class="site-header">
+                        <img src="/images/utec.png" alt="UTEC" class="site-icon">
+                        <h3>Sitio Oficial</h3>
+                    </div>
+                    <p>Información general e inscripciones</p>
+                    <div class="site-links">
+                        <a href="https://utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/utec.png" alt="UTEC" class="link-icon">
+                            Página Principal
+                        </a>
+                        <a href="https://descubri.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/descubri.png" alt="Descubrí UTEC" class="link-icon">
+                            Descubrí UTEC
+                        </a>
+                    </div>
+                </div>
+                <div class="site-card">
+                    <div class="site-header">
+                        <img src="/images/moodle_historico.png" alt="Histórico Moodle" class="site-icon">
+                        <h3>Proyectos y Recursos Adicionales</h3>
+                    </div>
+                    <p>Proyectos especiales y recursos históricos</p>
+                    <div class="site-links">
+                        <a href="https://historico-moodle.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/moodle_historico.png" alt="Histórico Moodle" class="link-icon">
+                            Histórico Moodle
+                        </a>
+                        <a href="https://duraznosmart.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/durazno_smart.png" alt="Durazno Smart" class="link-icon">
+                            Durazno Smart Village
+                        </a>
+                        <a href="https://desafioprofundo.utec.edu.uy" target="_blank" rel="noopener">
+                            <img src="/images/desafioprofundo.png" alt="Desafío Profundo" class="link-icon">
+                            Desafío Profundo
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="requirements" class="career-requirements">
+        <div class="container">
+            <header>
+                <h2 style="text-align: center; color: var(--utec-primary); margin-bottom: 30px;">
+                    Requerimientos para la Carrera LTI
+                </h2>
+            </header>
+            <div class="requirements-grid">
+                <div class="requirement-card">
+                    <h3>🌐 Conectividad</h3>
+                    <p>Conexión a internet estable para acceder a recursos digitales y plataformas virtuales</p>
+                </div>
+                <div class="requirement-card">
+                    <h3>💻 Hardware Recomendado</h3>
+                    <ul>
+                        <li><strong>SO:</strong> Windows 64 bits (macOS y Linux compatibles)</li>
+                        <li><strong>RAM:</strong> 16 GB mínimo, 32-64 GB recomendado</li>
+                        <li><strong>Procesador:</strong> Con capacidad de virtualización</li>
+                        <li><strong>Almacenamiento:</strong> 1 TB mínimo</li>
+                        <li><strong>Extras:</strong> Webcam y micrófono</li>
+                    </ul>
+                </div>
+                <div class="requirement-card">
+                    <h3>📋 Previaturas</h3>
+                    <p>Revisa constantemente las materias aprobadas y habilitaciones para evitar retrasos</p>
+                    <a href="https://utec.edu.uy/es/educacion/carrera/licenciatura-en-tecnologias-de-la-informacion/plan-de-carrera-lti/" target="_blank" rel="noopener" style="color: var(--utec-secondary); text-decoration: none;">Ver Plan de Carrera 2024</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="services">
+        <div class="container">
+            <header>
+                <h2 style="text-align: center; color: var(--utec-primary); margin-bottom: 30px;">
+                    Servicios en Sedes
+                </h2>
+            </header>
+            <div class="services-grid">
+                <div class="location-card">
+                    <h3>📍 Durazno</h3>
+                    <div class="service-group">
+                        <h4>Hoteles</h4>
+                        <ul>
+                            <li>Hotel Durazno: 4362 2040</li>
+                            <li>Hotel Santa Cristina: 4362 2525 / 094 161 111</li>
+                            <li>Plaza Apart Hotel: 4362 9999</li>
+                            <li>Patio Sarandí: 4363 1303</li>
+                            <li>Hotel Central: 4362 0305</li>
+                        </ul>
+                    </div>
+                    <div class="service-group">
+                        <h4>Taxis</h4>
+                        <ul>
+                            <li>Radio Taxi La Paz: 4362 9090</li>
+                            <li>Taxi Penza: 4362 0850</li>
+                            <li>4362 1031 / 4362 1001</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="location-card">
+                    <h3>📍 Fray Bentos</h3>
+                    <div class="service-group">
+                        <h4>Hoteles</h4>
+                        <ul>
+                            <li>Gran Hotel Fray Bentos: 4562 0566</li>
+                            <li>Plaza Hotel Fray Bentos: 4562 2363</li>
+                            <li>Hotel 25 de Mayo: 4562 2586</li>
+                            <li>Suculento Apart: Ver en Booking.com</li>
+                        </ul>
+                    </div>
+                    <div class="service-group">
+                        <h4>Taxis</h4>
+                        <ul>
+                            <li>City Taxi: 4562 5050</li>
+                            <li>Taxi 1313: 4562 1313 / 099 563 963</li>
+                            <li>4562 7057 / 4562 2121</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <header>
+                <h2 style="text-align: center; color: var(--utec-primary); margin-bottom: 30px;">
+                    Preguntas y Respuestas
+                </h2>
+            </header>
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>¿Cómo me matriculo a las materias?</span>
+                        <span class="faq-arrow">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Aquí tienes un video explicativo sobre cómo matricularte a las materias:</p>
+                        <video controls style="width: 100%; max-width: 600px; margin: 10px 0; border-radius: 8px;">
+                            <source src="/images/matriculas.mp4" type="video/mp4">
+                            Tu navegador no soporta la reproducción de video.
+                        </video>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>¿Este sitio pertenece a la UTEC?</span>
+                        <span class="faq-arrow">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>No, este proyecto es realizado por estudiantes recibidos de la UTEC, para estudiantes de la UTEC. 😊</p>
+                        <p>Creado por los Licenciados en Tecnologías de la Información Bruno Silveira, José Faller y Mariano Collazo como proyecto final de carrera.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Falta material de las materias</span>
+                        <span class="faq-arrow">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Próximamente</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Grupos online y clases de apoyo</span>
+                        <span class="faq-arrow">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Próximamente</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Quiero agregar/actualizar el material o tengo ideas de nuevas funcionalidades para la página</span>
+                        <span class="faq-arrow">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Podés dejarnos un comentario con tus ideas <a href="https://forms.gle/1234567890" style="color: var(--utec-secondary);">acá</a></p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Título intermedio y final</span>
+                        <span class="faq-arrow">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>La solicitud de los diplomas se realizan durante los meses de <strong>MAYO y NOVIEMBRE</strong> de cada año.</p>
+                        <p>Cada estudiante deberá realizar su solicitud a través de una consulta detallada en el <strong>ESPACIO COLABORATIVO</strong> anual del EVA.</p>
+                        <p><strong>Requisitos para Titular:</strong></p>
+                        <ul>
+                            <li>Es indispensable que el estudiante, previo a la solicitud, verifique el total de los créditos obtenidos y unidades curriculares aprobadas en su expediente, comparándolo con el PLAN DE ESTUDIOS vigente.</li>
+                            <li>Que exhiba el certificado que acredite haber alcanzado el nivel de inglés requerido acorde a su titulación.</li>
+                            <li><strong>Documentación:</strong>
+                                <ul>
+                                    <li>Cédula de identidad vigente</li>
+                                    <li>Carné de salud vigente</li>
+                                </ul>
+                            </li>
+                        </ul>
+                        <p><strong>IMPORTANTE:</strong> Se entregará el título junto a un documento complementario. El nombre del estudiante que figura en el título será exactamente igual al que figura en la cédula de identidad. Luego de realizada la solicitud, deberán enviar vía correo a su secretaría, los documentos detallados en el punto 3. Hasta no cumplir con este requisito, dicha solicitud quedará postergada para el siguiente periodo de Titulación.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        <span>Descargo de responsabilidad</span>
+                        <span class="faq-arrow">+</span>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Todos los logotipos, marcas, imágenes, textos, paletas de color o textura y demás elementos protegidos por el Derecho de Autor y la Propiedad Industrial, incluídos en los medios digitales de la presente web son propiedad exclusiva de UTEC, quien es titular de todos los derechos de propiedad intelectual sobre las mismas, como consta en los registros respectivos.</p>
+                        <p>Toda la información relacionada a UTEC, proporcionada por este sitio web, es propiedad exclusiva de UTEC y no está autorizada su copia o divulgación.</p>
+                        <p>El presente sitio web tiene como cometido único, facilitar la información y reunir a los diferentes actores involucrados en la carrera de 'Tecnologías de la información' desarrollada por UTEC; con el fin de fomentar la cooperación, la creatividad y la autonomía de las y los estudiantes.</p>
+                        <p>Podés acceder a nuestros Términos y Condiciones en el siguiente link: <a href="/terms" style="color: var(--utec-secondary);">Política de privacidad</a></p>
+                        <p>El costo de dominio (USD 1.7/mes) y hosting (USD 15.99/mes) es mantenido exclusivamente por nosotros, si el sitio te es útil y querés aportar a este proyecto podes hacerlo por acá: <a href="#" style="color: var(--utec-secondary);">PayPal</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    </main>
+
+    <%- include('partials/footer', { showTerms: true }) %>
+
+    <style>
+        /* Mobile Navigation Styles */
+        .mobile-menu-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            flex-direction: column;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        
+        .mobile-menu-toggle span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background-color: white;
+            margin: 3px 0;
+            transition: 0.3s;
+            border-radius: 2px;
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(1) {
+            transform: rotate(-45deg) translate(-5px, 6px);
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .mobile-menu-toggle.active span:nth-child(3) {
+            transform: rotate(45deg) translate(-5px, -6px);
+        }
+        
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-links a:hover {
+            color: var(--utec-secondary);
+        }
+        
+        .nav-login-btn {
+            margin-left: 20px;
+            color: var(--utec-secondary) !important;
+        }
+        
+        .navbar-logo {
+            height: 24px;
+            width: auto;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: flex !important;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                right: -100%;
+                background-color: var(--utec-primary);
+                width: 100%;
+                height: calc(100vh - 70px);
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                padding-top: 50px;
+                gap: 40px;
+                transition: right 0.3s ease;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            
+            .nav-links.active {
+                right: 0;
+            }
+            
+            .nav-links a {
+                font-size: 18px;
+                padding: 15px 0;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+                width: 80%;
+                text-align: center;
+            }
+            
+            .nav-login-btn {
+                margin-left: 0;
+                margin-top: 20px;
+                padding: 15px 30px;
+                font-size: 16px;
+            }
+        }
+        
+        .faq-section {
+            background-color: #f8f9fa;
+            padding: 60px 0;
+        }
+        
+        .faq-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .faq-item {
+            background-color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            padding: 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            border: none;
+            width: 100%;
+            text-align: left;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--utec-primary);
+            transition: background-color 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .faq-arrow {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--utec-accent);
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            background-color: #f8f9fa;
+        }
+        
+        .faq-answer.active {
+            padding: 20px;
+            max-height: 1000px;
+        }
+        
+        .faq-answer p {
+            margin-bottom: 10px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .faq-answer ul {
+            margin-left: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .faq-answer li {
+            margin-bottom: 5px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .faq-item.active .faq-arrow {
+            transform: rotate(45deg);
+        }
+        
+        /* Background images */
+        .hero-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/background1.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+        }
+        
+        .utec-sites-bg {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url('/images/background3.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        
+        /* Site icons and link icons */
+        .site-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .site-icon {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+        
+        .link-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .site-links a {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .site-links a:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero-bg,
+            .utec-sites-bg {
+                background-attachment: scroll;
+            }
+            
+            .site-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .site-icon {
+                width: 24px;
+                height: 24px;
+            }
+            
+            .link-icon {
+                width: 14px;
+                height: 14px;
+            }
+        }
+    </style>
+
+    <script>
+        // Mobile menu functionality
+        function toggleMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const isActive = navLinks.classList.contains('active');
+            
+            navLinks.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+            
+            // Update ARIA attributes for accessibility
+            menuToggle.setAttribute('aria-expanded', !isActive);
+            menuToggle.setAttribute('aria-label', !isActive ? 'Cerrar menú de navegación' : 'Abrir menú de navegación');
+        }
+        
+        function closeMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            
+            navLinks.classList.remove('active');
+            menuToggle.classList.remove('active');
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navLinks = document.getElementById('navLinks');
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const navbar = document.querySelector('.navbar');
+            
+            if (!navbar.contains(event.target) && navLinks.classList.contains('active')) {
+                closeMobileMenu();
+            }
+        });
+        
+        // FAQ functionality
+        function toggleFAQ(element) {
+            const faqItem = element.parentElement;
+            const faqAnswer = element.nextElementSibling;
+            const arrow = element.querySelector('.faq-arrow');
+            
+            // Close all other FAQ items
+            document.querySelectorAll('.faq-item').forEach(item => {
+                if (item !== faqItem) {
+                    item.classList.remove('active');
+                    item.querySelector('.faq-answer').classList.remove('active');
+                }
+            });
+            
+            // Toggle current FAQ item
+            faqItem.classList.toggle('active');
+            faqAnswer.classList.toggle('active');
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

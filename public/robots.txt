@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /login
+Allow: /terms
+Allow: /css/
+Allow: /js/
+Allow: /images/
+
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin/
+
+Sitemap: https://lti.uy/sitemap.xml

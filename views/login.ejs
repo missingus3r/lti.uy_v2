@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - LTI.UY</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="navbar-brand">LTI.UY</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 style="text-align: center; color: var(--utec-primary); margin-bottom: 30px;">
+                Iniciar Sesión
+            </h2>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username" class="form-label">Usuario UTEC</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-control" 
+                        required 
+                        placeholder="Tu usuario de Moodle"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        required 
+                        placeholder="Tu contraseña de Moodle"
+                    >
+                </div>
+                
+                <button type="submit" class="btn btn-secondary" id="submitButton" style="width: 100%;">
+                    <span id="buttonText">Ingresar</span>
+                    <span id="buttonLoader" style="display: none;">
+                        <span class="button-spinner"></span>
+                        Verificando...
+                    </span>
+                </button>
+                
+                <div class="form-footer">
+                    <p>Al iniciar sesión, aceptas nuestros <a href="/terms">Términos y Condiciones</a></p>
+                    <p style="margin-top: 10px;">No almacenamos ningún dato personal</p>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+
+    <!-- Modal de Error -->
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h3 style="color: var(--error); margin-bottom: 20px;">Error de Autenticación</h3>
+            <p id="errorMessage">Las credenciales ingresadas no son válidas. Por favor, verifica tu usuario y contraseña de UTEC.</p>
+            <button class="btn btn-secondary" onclick="closeModal()" style="margin-top: 20px;">
+                Intentar nuevamente
+            </button>
+        </div>
+    </div>
+
+    <script src="/js/main.js"></script>
+</body>
+</html>

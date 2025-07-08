@@ -1,0 +1,26 @@
+<footer style="background-color: var(--utec-dark); color: var(--white); padding: 30px 0; text-align: center;<%= typeof marginTop !== 'undefined' ? ' margin-top: ' + marginTop + ';' : '' %>" role="contentinfo">
+    <div class="container">
+        <p>&copy; <span class="current-year"></span> LTI.UY - Plataforma no oficial para estudiantes de LTI</p>
+        <div style="margin-top: 15px;">
+            <a href="https://linkedin.com/in/brunomartinezuy" target="_blank" style="color: #74b9ff; text-decoration: none; margin: 0 15px;">LinkedIn</a>
+            <a href="https://surlink.cc" target="_blank" style="color: #74b9ff; text-decoration: none; margin: 0 15px;">SurLink.cc</a>
+            <a href="https://dokta.cc" target="_blank" style="color: #74b9ff; text-decoration: none; margin: 0 15px;">Dokta.cc</a>
+            <a href="https://micope.org" target="_blank" style="color: #74b9ff; text-decoration: none; margin: 0 15px;">Micope.org</a>
+        </div>
+        <% if (typeof showTerms !== 'undefined' && showTerms) { %>
+        <p style="margin-top: 10px; font-size: 0.9rem;">
+            <a href="/terms" style="color: var(--utec-secondary); text-decoration: none;">Términos y Condiciones</a>
+        </p>
+        <% } %>
+    </div>
+</footer>
+
+<script>
+    // Set dynamic copyright year for all footer instances
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearElements = document.querySelectorAll('.current-year');
+        yearElements.forEach(element => {
+            element.textContent = new Date().getFullYear();
+        });
+    });
+</script>
