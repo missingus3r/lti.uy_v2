@@ -71,7 +71,6 @@ jobs:
           slot-name: 'Production'
           package: .
           restart: true
-          startup-command: '/home/site/wwwroot/startup.sh'
           
       - name: 'Wait for app to be ready'
         run: |
