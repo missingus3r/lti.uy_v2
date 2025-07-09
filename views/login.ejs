@@ -1,3 +1,15 @@
+<!-- 
+.____  ___________.___            ___ ___  ____ _____________ 
+|    | \__    ___/|   |          /   |   \|    |   \______   \
+|    |   |    |   |   |  ______ /    ~    \    |   /|    |  _/
+|    |___|    |   |   | /_____/ \    Y    /    |  / |    |   \
+|_______ \____|   |___|          \___|_  /|______/  |______  /
+        \/                             \/                  \/ 
+
+Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www.linkedin.com/in/bruno-silveira-730107a7/  
+
+-->
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,15 +21,21 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="navbar-brand">LTI.UY</a>
+            <a href="/" class="navbar-brand">
+                <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" class="navbar-logo">
+                LTI.UY
+            </a>
         </div>
     </nav>
 
     <div class="container">
         <div class="form-container">
-            <h2 style="text-align: center; color: var(--utec-primary); margin-bottom: 30px;">
-                Iniciar Sesión
-            </h2>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" style="height: 60px; margin-bottom: 15px; background-color: white; border-radius: 50%; padding: 8px;">
+                <h2 style="color: var(--utec-primary); margin: 0;">
+                    Iniciar Sesión
+                </h2>
+            </div>
             
             <form id="loginForm">
                 <div class="form-group">
@@ -34,14 +52,25 @@
                 
                 <div class="form-group">
                     <label for="password" class="form-label">Contraseña</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        class="form-control" 
-                        required 
-                        placeholder="Tu contraseña de Moodle"
-                    >
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            class="form-control" 
+                            required 
+                            placeholder="Tu contraseña de Moodle"
+                            style="padding-right: 45px;"
+                        >
+                        <button 
+                            type="button" 
+                            id="togglePassword" 
+                            style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #666; font-size: 18px; padding: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;"
+                            title="Mostrar/ocultar contraseña"
+                        >
+                            👁️
+                        </button>
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-secondary" id="submitButton" style="width: 100%;">
@@ -52,27 +81,58 @@
                     </span>
                 </button>
                 
+                <!-- Alert for attempts and blocking -->
+                <div id="attemptAlert" class="attempt-alert" style="display: none;">
+                    <div id="attemptMessage"></div>
+                </div>
+                
                 <div class="form-footer">
                     <p>Al iniciar sesión, aceptas nuestros <a href="/terms">Términos y Condiciones</a></p>
                     <p style="margin-top: 10px;">No almacenamos ningún dato personal</p>
+                    <p style="margin-top: 15px;">
+                        <a href="/" style="color: var(--utec-primary); text-decoration: none;">← Volver al Inicio</a>
+                    </p>
                 </div>
             </form>
             
         </div>
     </div>
 
+    <%- include('partials/footer', { marginTop: '50px', showTerms: true }) %>
+
     <!-- Modal de Error -->
     <div id="errorModal" class="modal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
-            <h3 style="color: var(--error); margin-bottom: 20px;">Error de Autenticación</h3>
+            <h3 id="errorTitle" style="margin-bottom: 20px;">Error de Autenticación</h3>
             <p id="errorMessage">Las credenciales ingresadas no son válidas. Por favor, verifica tu usuario y contraseña de UTEC.</p>
+            <div id="blockInfo" style="display: none; margin-top: 15px; padding: 10px; background-color: #fff3cd; border-radius: 5px;">
+                <p id="blockMessage" style="margin: 0; color: #856404;"></p>
+                <div id="countdownTimer" style="margin-top: 10px; font-weight: bold; color: #d32f2f;"></div>
+            </div>
             <button class="btn btn-secondary" onclick="closeModal()" style="margin-top: 20px;">
-                Intentar nuevamente
+                <span id="modalButtonText">Intentar nuevamente</span>
             </button>
         </div>
     </div>
 
     <script src="/js/main.js"></script>
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = this;
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.textContent = '🙈';
+                toggleButton.title = 'Ocultar contraseña';
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.textContent = '👁️';
+                toggleButton.title = 'Mostrar contraseña';
+            }
+        });
+    </script>
 </body>
 </html>

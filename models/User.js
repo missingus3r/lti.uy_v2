@@ -43,8 +43,11 @@ userSchema.methods.generateUserHash = function() {
 };
 
 // Check if data needs to be fetched (once per day)
-userSchema.methods.needsDataUpdate = function() {
-    if (!this.lastDataFetch) return true;
+userSchema.methods.needsDataUpdate = function() {   
+    if (!this.lastDataFetch) {
+        console.log(`  - Returning true (no previous fetch)`);
+        return true;
+    }
     
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
@@ -81,6 +84,7 @@ userSchema.methods.incrementManualRefresh = function() {
         this.manualRefreshCount += 1;
     }
 };
+
 
 const User = mongoose.model('User', userSchema);
 

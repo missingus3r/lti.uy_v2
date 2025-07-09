@@ -1,8 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const ChatHistory = require('../models/ChatHistory');
-const User = require('../models/User');
-const AcademicProgress = require('../models/AcademicProgress');
-const CareerPlan = require('../models/CareerPlan');
 
 /**
  * Helper function to build conversation history for context
@@ -36,8 +33,14 @@ function buildConversationHistory(messages) {
  */
 exports.chat = async (req, res) => {
     try {
-        const { question, sessionId } = req.body;
+        const { question, sessionId, context } = req.body;
         if (!question) return res.status(400).json({ error: 'Pregunta requerida' });
+
+        // Check if user is in session
+        if (!req.session.user || !req.session.user._id) {
+            console.log('🤖 Assistant request failed: No user in session');
+            return res.status(401).json({ error: 'No autenticado. Por favor, inicia sesión nuevamente.' });
+        }
 
         const userId = req.session.user._id;
         const username = req.session.user.username;
@@ -46,95 +49,34 @@ exports.chat = async (req, res) => {
             userId,
             username,
             question: question.substring(0, 50) + '...',
-            sessionId
+            sessionId,
+            hasContext: !!context
         });
 
-        // Get user data
-        const user = await User.findById(userId).lean();
-        if (!user) {
-            return res.status(400).json({ error: 'Usuario no encontrado' });
-        }
-
-        // Get user's academic progress
-        const academicProgress = await AcademicProgress.findOne({ userHash: user.userHash }).lean();
+        // Use context provided by frontend if available, otherwise build minimal context
+        let assistantContext = context;
         
-        // Get available career plans
-        const careerPlans = await CareerPlan.find({}).lean();
-        
-        // Get selected career plan
-        let selectedPlan = null;
-        if (user.selectedPlan) {
-            selectedPlan = await CareerPlan.findById(user.selectedPlan).lean();
-        } else if (careerPlans.length > 0) {
-            selectedPlan = careerPlans[0]; // Default to first plan
+        if (!assistantContext) {
+            // Fallback minimal context if frontend doesn't provide it
+            assistantContext = {
+                user: {
+                    username: username,
+                    message: 'Contexto no proporcionado por el frontend'
+                },
+                utecInfo: {
+                    institution: 'Universidad Tecnológica del Uruguay (UTEC)',
+                    career: 'Licenciatura en Tecnologías de la Información (LTI)',
+                    platform: 'LTI.UY - Plataforma no oficial para estudiantes de LTI',
+                    features: [
+                        'Seguimiento de progreso académico',
+                        'Visualización de materias aprobadas y pendientes',
+                        'Cálculo automático de créditos',
+                        'Comparación con diferentes planes de carrera',
+                        'Asistente de IA para consultas académicas'
+                    ]
+                }
+            };
         }
-
-        // Build comprehensive context for LTI.UY
-        const context = {
-            user: {
-                username: user.username,
-                registrationDate: user.createdAt,
-                selectedPlan: selectedPlan ? selectedPlan.name : 'No seleccionado',
-                lastDataUpdate: user.lastDataFetch,
-                manualRefreshCount: user.manualRefreshCount
-            },
-            academicProgress: academicProgress ? {
-                totalCredits: academicProgress.totalCredits,
-                requiredCredits: academicProgress.requiredCredits,
-                progressPercentage: Math.round((academicProgress.totalCredits / academicProgress.requiredCredits) * 100),
-                remainingCredits: academicProgress.requiredCredits - academicProgress.totalCredits,
-                subjectsTotal: academicProgress.subjects.length,
-                subjectsPassed: academicProgress.subjects.filter(s => s.passed).length,
-                subjectsPending: academicProgress.subjects.filter(s => !s.passed).length,
-                lastUpdated: academicProgress.lastUpdated,
-                subjects: academicProgress.subjects.map(s => ({
-                    name: s.name,
-                    credits: s.credits,
-                    type: s.type,
-                    passed: s.passed,
-                    grade: s.grade,
-                    convocatoria: s.convocatoria
-                }))
-            } : {
-                message: 'No se han cargado datos académicos aún. El usuario debe iniciar sesión para obtener sus datos desde el portal académico.'
-            },
-            careerPlans: {
-                available: careerPlans.map(plan => ({
-                    name: plan.name,
-                    totalCredits: plan.totalCredits,
-                    description: plan.description,
-                    subjects: plan.subjects.map(s => ({
-                        name: s.name,
-                        credits: s.credits,
-                        semester: s.semester,
-                        type: s.type
-                    }))
-                })),
-                selected: selectedPlan ? {
-                    name: selectedPlan.name,
-                    totalCredits: selectedPlan.totalCredits,
-                    description: selectedPlan.description,
-                    subjects: selectedPlan.subjects.map(s => ({
-                        name: s.name,
-                        credits: s.credits,
-                        semester: s.semester,
-                        type: s.type
-                    }))
-                } : null
-            },
-            utecInfo: {
-                institution: 'Universidad Tecnológica del Uruguay (UTEC)',
-                career: 'Licenciatura en Tecnologías de la Información (LTI)',
-                platform: 'LTI.UY - Plataforma no oficial para estudiantes de LTI',
-                features: [
-                    'Seguimiento de progreso académico',
-                    'Visualización de materias aprobadas y pendientes',
-                    'Cálculo automático de créditos',
-                    'Comparación con diferentes planes de carrera',
-                    'Asistente de IA para consultas académicas'
-                ]
-            }
-        };
 
         // Handle chat history - Load existing session BEFORE generating response
         let chatSession;
@@ -162,7 +104,7 @@ exports.chat = async (req, res) => {
         const prompt = `Eres un asistente virtual de LTI.UY, una plataforma no oficial para estudiantes de la Licenciatura en Tecnologías de la Información (LTI) de UTEC.
 
 CONTEXTO DEL USUARIO Y SISTEMA:
-${JSON.stringify(context, null, 2)}
+${JSON.stringify(assistantContext, null, 2)}
 
 INSTRUCCIONES:
 - Responde en español de manera amigable y profesional
@@ -235,6 +177,11 @@ ${question}`;
  */
 exports.getChatHistory = async (req, res) => {
     try {
+        // Check if user is in session
+        if (!req.session.user || !req.session.user._id) {
+            return res.status(401).json({ error: 'No autenticado' });
+        }
+
         const userId = req.session.user._id;
         const limit = parseInt(req.query.limit) || 10;
 
@@ -252,6 +199,11 @@ exports.getChatHistory = async (req, res) => {
  */
 exports.getChatSession = async (req, res) => {
     try {
+        // Check if user is in session
+        if (!req.session.user || !req.session.user._id) {
+            return res.status(401).json({ error: 'No autenticado' });
+        }
+
         const { sessionId } = req.params;
         const userId = req.session.user._id;
 
@@ -273,6 +225,11 @@ exports.getChatSession = async (req, res) => {
  */
 exports.deleteChatSession = async (req, res) => {
     try {
+        // Check if user is in session
+        if (!req.session.user || !req.session.user._id) {
+            return res.status(401).json({ error: 'No autenticado' });
+        }
+
         const { sessionId } = req.params;
         const userId = req.session.user._id;
 
@@ -294,6 +251,11 @@ exports.deleteChatSession = async (req, res) => {
  */
 exports.clearChatHistory = async (req, res) => {
     try {
+        // Check if user is in session
+        if (!req.session.user || !req.session.user._id) {
+            return res.status(401).json({ error: 'No autenticado' });
+        }
+
         const userId = req.session.user._id;
 
         const result = await ChatHistory.deleteMany({ userId });

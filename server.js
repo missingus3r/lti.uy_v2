@@ -59,7 +59,7 @@ app.get('/welcome', (req, res) => {
     return res.redirect('/login');
   }
   res.render('welcome', { 
-    user: req.session.user,
+    user: req.session.user.username,
     session: req.session 
   });
 });

@@ -207,6 +207,16 @@
             color: #7b1fa2;
         }
         
+        .type-userBlocked {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .type-userUnblocked {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
         .pagination {
             display: flex;
             justify-content: center;
@@ -361,6 +371,14 @@
                 <h3>Usuarios Registrados</h3>
                 <div class="number"><%= stats.totalUsers %></div>
             </div>
+            <div class="stat-card">
+                <h3>Usuarios Bloqueados</h3>
+                <div class="number" style="color: #e74c3c;"><%= stats.blockedUsers %></div>
+            </div>
+            <div class="stat-card">
+                <h3>Usuarios con Intentos Fallidos</h3>
+                <div class="number" style="color: #f39c12;"><%= stats.usersWithFailedAttempts %></div>
+            </div>
         </div>
         
         <!-- Tabs -->
@@ -368,6 +386,7 @@
             <div class="tab-buttons">
                 <button class="tab-btn active" onclick="switchTab('logs')">Logs de Actividad</button>
                 <button class="tab-btn" onclick="switchTab('users')">Usuarios</button>
+                <button class="tab-btn" onclick="switchTab('security')">Seguridad</button>
                 <button class="tab-btn" onclick="switchTab('chats')">Historial de Chats</button>
             </div>
             
@@ -385,6 +404,8 @@
                                 <option value="loginSuccess">Logins Exitosos</option>
                                 <option value="loginFailure">Logins Fallidos</option>
                                 <option value="dataUpdate">Actualizaciones de Datos</option>
+                                <option value="userBlocked">Usuarios Bloqueados</option>
+                                <option value="userUnblocked">Usuarios Desbloqueados</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -405,7 +426,12 @@
                 
                 <!-- Logs Table -->
                 <div class="logs-table">
-                    <h2>Registro de Actividad</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #eee;">
+                        <h2 style="margin: 0;">Registro de Actividad</h2>
+                        <button class="btn btn-danger" onclick="clearLogs()" style="background-color: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                            🗑️ Limpiar Logs
+                        </button>
+                    </div>
                     <div id="logs-container">
                         <div class="loading">Cargando logs...</div>
                     </div>
@@ -416,6 +442,16 @@
             <div id="users-tab" class="tab-content">
                 <div class="users-container">
                     <div class="loading">Cargando usuarios...</div>
+                </div>
+            </div>
+            
+            <!-- Security Tab -->
+            <div id="security-tab" class="tab-content">
+                <div class="logs-table">
+                    <h2>Usuarios Bloqueados y Intentos Fallidos</h2>
+                    <div id="security-container">
+                        <div class="loading">Cargando información de seguridad...</div>
+                    </div>
                 </div>
             </div>
             
@@ -471,8 +507,12 @@
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('users-tab').classList.add('active');
                 loadUsers();
-            } else if (tab === 'chats') {
+            } else if (tab === 'security') {
                 document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('security-tab').classList.add('active');
+                loadBlockedUsers();
+            } else if (tab === 'chats') {
+                document.querySelectorAll('.tab-btn')[3].classList.add('active');
                 document.getElementById('chats-tab').classList.add('active');
                 loadChats();
             }
@@ -532,7 +572,9 @@
                     'pageVisit': 'Visita',
                     'loginSuccess': 'Login Exitoso',
                     'loginFailure': 'Login Fallido',
-                    'dataUpdate': 'Actualización'
+                    'dataUpdate': 'Actualización',
+                    'userBlocked': 'Usuario Bloqueado',
+                    'userUnblocked': 'Usuario Desbloqueado'
                 }[log.type] || log.type;
                 
                 html += `
@@ -771,6 +813,141 @@
         // Apply chat filters
         function applyChatFilters() {
             loadChats(1);
+        }
+        
+        // Load blocked users
+        async function loadBlockedUsers() {
+            try {
+                const response = await fetch('/admin/api/blocked-users');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderBlockedUsers(data.users);
+                } else {
+                    document.getElementById('security-container').innerHTML = '<div class="empty-state">Error al cargar usuarios bloqueados</div>';
+                }
+            } catch (error) {
+                console.error('Error loading blocked users:', error);
+                document.getElementById('security-container').innerHTML = '<div class="empty-state">Error al cargar usuarios bloqueados</div>';
+            }
+        }
+        
+        // Render blocked users table
+        function renderBlockedUsers(users) {
+            if (users.length === 0) {
+                document.getElementById('security-container').innerHTML = '<div class="empty-state">No hay usuarios con problemas de seguridad</div>';
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Estado</th>
+                            <th>Intentos Fallidos</th>
+                            <th>Bloqueado Desde</th>
+                            <th>Tiempo Restante</th>
+                            <th>IP</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            users.forEach(user => {
+                const blockedDate = user.blockedAt ? new Date(user.blockedAt).toLocaleString('es-UY') : '-';
+                let statusBadge = '';
+                let timeRemaining = '-';
+                let actions = '';
+                
+                switch (user.status) {
+                    case 'blocked':
+                        statusBadge = '<span class="type-badge" style="background-color: #ffebee; color: #d32f2f;">Bloqueado</span>';
+                        timeRemaining = user.remainingTime > 0 ? `${user.remainingTime} min` : '-';
+                        actions = `<button onclick="unblockUser('${user.username}')" class="btn btn-primary" style="font-size: 0.8rem; padding: 4px 8px;">Desbloquear</button>`;
+                        break;
+                    case 'expired':
+                        statusBadge = '<span class="type-badge" style="background-color: #fff3e0; color: #f57c00;">Expirado</span>';
+                        actions = `<button onclick="unblockUser('${user.username}')" class="btn btn-primary" style="font-size: 0.8rem; padding: 4px 8px;">Limpiar</button>`;
+                        break;
+                    case 'warning':
+                        statusBadge = '<span class="type-badge" style="background-color: #fff8e1; color: #f9a825;">Advertencia</span>';
+                        actions = `<button onclick="unblockUser('${user.username}')" class="btn btn-primary" style="font-size: 0.8rem; padding: 4px 8px;">Resetear</button>`;
+                        break;
+                    default:
+                        statusBadge = '<span class="type-badge" style="background-color: #e8f5e9; color: #388e3c;">Activo</span>';
+                }
+                
+                html += `
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${statusBadge}</td>
+                        <td>${user.failedLoginAttempts}/3</td>
+                        <td>${blockedDate}</td>
+                        <td>${timeRemaining}</td>
+                        <td>${user.ipAddress || '-'}</td>
+                        <td>${actions}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            document.getElementById('security-container').innerHTML = html;
+        }
+        
+        // Unblock user function
+        async function unblockUser(username) {
+            if (!confirm(`¿Estás seguro de que quieres desbloquear/resetear el usuario ${username}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/admin/api/unblock-user/${username}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(data.message);
+                    loadBlockedUsers(); // Reload the table
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error unblocking user:', error);
+                alert('Error al desbloquear usuario');
+            }
+        }
+        
+        // Clear logs function
+        async function clearLogs() {
+            if (!confirm('¿Estás seguro de que quieres limpiar todos los logs? Esta acción no se puede deshacer.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/admin/api/clear-logs', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert(`Logs limpiados exitosamente. Se eliminaron ${data.deletedCount} registros.`);
+                    loadLogs(); // Reload the logs table
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            } catch (error) {
+                console.error('Error clearing logs:', error);
+                alert('Error al limpiar logs');
+            }
         }
         
         // Load logs on page load

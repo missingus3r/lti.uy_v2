@@ -4,7 +4,7 @@ const logSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['pageVisit', 'loginAttempt', 'loginSuccess', 'loginFailure', 'dataUpdate']
+    enum: ['pageVisit', 'loginAttempt', 'loginSuccess', 'loginFailure', 'dataUpdate', 'userBlocked', 'userUnblocked']
   },
   timestamp: {
     type: Date,

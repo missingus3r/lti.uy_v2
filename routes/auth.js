@@ -3,9 +3,10 @@ const router = express.Router();
 const { authenticateWithMoodle } = require('../utils/moodleAuth');
 const { scrapeAcademicProgress } = require('../utils/academicScraper');
 const User = require('../models/User');
+const LoginAttempt = require('../models/LoginAttempt');
 const AcademicProgress = require('../models/AcademicProgress');
 const CareerPlan = require('../models/CareerPlan');
-const { logLoginAttempt, getRealIP } = require('../utils/logger');
+const { logLoginAttempt, logUserBlocked, logDataUpdate, getRealIP } = require('../utils/logger');
 
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -26,7 +27,11 @@ router.post('/login', async (req, res) => {
             // Admin login successful
             req.session.authenticated = true;
             req.session.isAdmin = true;
-            req.session.user = username;
+            req.session.user = {
+                _id: 'admin',
+                username: username,
+                userHash: 'admin'
+            };
             
             // Log successful admin login
             await logLoginAttempt(username, getRealIP(req), true, req.headers['user-agent']);
@@ -39,6 +44,23 @@ router.post('/login', async (req, res) => {
             });
         }
         
+        // Check login attempts for this username (regardless of user existence)
+        const loginAttempt = await LoginAttempt.findOrCreate(username, getRealIP(req), req.headers['user-agent']);
+        
+        // Check if this username is blocked
+        if (loginAttempt.isCurrentlyBlocked()) {
+            const remainingTime = loginAttempt.getRemainingBlockTime();
+            await logLoginAttempt(username, getRealIP(req), false, req.headers['user-agent']);
+            
+            return res.status(429).json({
+                success: false,
+                message: `Tu cuenta está bloqueada por intentos fallidos. Intenta nuevamente en ${remainingTime} minutos.`,
+                isBlocked: true,
+                remainingTime: remainingTime,
+                blockExpiresAt: loginAttempt.blockExpiresAt
+            });
+        }
+        
         // Regular user login
         const result = await authenticateWithMoodle(username, password);
         
@@ -46,7 +68,7 @@ router.post('/login', async (req, res) => {
             // Log successful login
             await logLoginAttempt(username, getRealIP(req), true, req.headers['user-agent']);
             
-            // Find or create user
+            // Find or create user in User collection
             let user = await User.findOne({ username });
             
             if (!user) {
@@ -56,16 +78,40 @@ router.post('/login', async (req, res) => {
                 await user.save();
             }
             
+            // Reset failed attempts on successful login
+            loginAttempt.resetFailedAttempts();
+            await loginAttempt.save();
+            
             req.session.authenticated = true;
-            req.session.user = username;
+            req.session.user = {
+                _id: user._id,
+                username: user.username,
+                userHash: user.userHash
+            };
             req.session.userHash = user.userHash;
             
             // Check if we need to fetch academic data
-            if (user.needsDataUpdate()) {
+            const needsUpdate = user.needsDataUpdate();
+            console.log(`User ${username} - needsDataUpdate: ${needsUpdate}, lastDataFetch: ${user.lastDataFetch}`);
+            
+            // Also check if user has academic progress data
+            const academicProgress = await AcademicProgress.findOne({ userHash: user.userHash });
+            console.log(`User ${username} - has academic progress: ${!!academicProgress}`);
+            
+            console.log(`User ${username} - About to check needsUpdate condition: ${needsUpdate}`);
+            
+            // Force update if user has no academic progress data, regardless of lastDataFetch
+            const shouldFetchData = needsUpdate || !academicProgress;
+            console.log(`User ${username} - shouldFetchData: ${shouldFetchData} (needsUpdate: ${needsUpdate}, hasAcademicProgress: ${!!academicProgress})`);
+            
+            if (shouldFetchData) {
+                console.log(`Starting academic scraper for user ${username}`);
                 // Fetch academic progress in background
                 scrapeAcademicProgress(username, password)
                     .then(async (progressResult) => {
+                        console.log(`Scraper result for ${username}:`, progressResult);
                         if (progressResult.success) {
+                            console.log(`Processing academic progress for ${username} - ${progressResult.subjects.length} subjects found`);
                             // Update or create academic progress
                             let academicProgress = await AcademicProgress.findOne({ userHash: user.userHash });
                             
@@ -74,9 +120,11 @@ router.post('/login', async (req, res) => {
                                     userHash: user.userHash,
                                     subjects: progressResult.subjects
                                 });
+                                console.log(`Created new academic progress for ${username}`);
                             } else {
                                 // Merge new data with existing data (preserve existing, update grades, add new subjects)
                                 academicProgress.mergeSubjectsData(progressResult.subjects);
+                                console.log(`Updated existing academic progress for ${username}`);
                             }
                             
                             academicProgress.calculateTotalCredits();
@@ -85,25 +133,62 @@ router.post('/login', async (req, res) => {
                             // Update user's last fetch date
                             user.lastDataFetch = new Date();
                             await user.save();
+                            
+                            console.log(`Academic progress saved for ${username} - Total credits: ${academicProgress.totalCredits}`);
+                            
+                            // Log the automatic data update
+                            await logDataUpdate(
+                                username,
+                                getRealIP(req),
+                                `Actualización automática de datos académicos - Créditos: ${academicProgress.totalCredits}/${academicProgress.requiredCredits}`
+                            );
+                        } else {
+                            console.log(`Scraper failed for ${username}:`, progressResult.message);
                         }
                     })
                     .catch(err => console.error('Error fetching academic progress:', err));
+            } else {
+                console.log(`No need to update data for user ${username} - last fetch: ${user.lastDataFetch}, has academic progress: ${!!academicProgress}`);
             }
             
             res.json({
                 success: true,
                 message: 'Autenticación exitosa',
                 userHash: user.userHash,
-                needsUpdate: user.needsDataUpdate()
+                needsUpdate: shouldFetchData
             });
         } else {
             // Log failed login
             await logLoginAttempt(username, getRealIP(req), false, req.headers['user-agent']);
             
-            res.status(401).json({
-                success: false,
-                message: result.message || 'Credenciales inválidas'
-            });
+            // Handle failed login attempts and blocking
+            loginAttempt.incrementFailedAttempts();
+            
+            // Check if user should be blocked (3 failed attempts)
+            if (loginAttempt.failedAttempts >= 3) {
+                loginAttempt.blockUser();
+                await loginAttempt.save();
+                
+                // Log the blocking event
+                await logUserBlocked(username, getRealIP(req), 'Usuario bloqueado por 3 intentos fallidos');
+                
+                return res.status(429).json({
+                    success: false,
+                    message: 'Demasiados intentos fallidos. Tu cuenta ha sido bloqueada por 15 minutos.',
+                    isBlocked: true,
+                    remainingTime: 15,
+                    blockExpiresAt: loginAttempt.blockExpiresAt
+                });
+            } else {
+                await loginAttempt.save();
+                const remainingAttempts = loginAttempt.getRemainingAttempts();
+                
+                return res.status(401).json({
+                    success: false,
+                    message: `Credenciales inválidas. Te quedan ${remainingAttempts} intentos antes de que tu cuenta sea bloqueada.`,
+                    remainingAttempts: remainingAttempts
+                });
+            }
         }
     } catch (error) {
         console.error('Error en autenticación:', error);
@@ -167,7 +252,7 @@ router.post('/refresh-progress', async (req, res) => {
     try {
         const { password } = req.body;
         const userHash = req.session.userHash;
-        const username = req.session.user;
+        const username = req.session.user.username;
         
         if (!req.session.authenticated || !userHash || !username) {
             return res.status(401).json({
@@ -226,6 +311,13 @@ router.post('/refresh-progress', async (req, res) => {
             user.lastDataFetch = new Date();
             user.incrementManualRefresh();
             await user.save();
+            
+            // Log the data update
+            await logDataUpdate(
+                username,
+                getRealIP(req),
+                `Actualización manual de datos académicos - Créditos: ${academicProgress.totalCredits}/${academicProgress.requiredCredits}`
+            );
             
             res.json({
                 success: true,

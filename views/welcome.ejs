@@ -19,23 +19,89 @@
         
         .progress-bar-container {
             background-color: #e0e0e0;
-            border-radius: 20px;
-            height: 30px;
+            border-radius: 12px;
+            height: 24px;
             overflow: hidden;
             position: relative;
             margin: 20px 0;
         }
         
         .progress-bar {
-            background: linear-gradient(90deg, #2ecc71, #27ae60);
+            background: linear-gradient(90deg, #ffc107, #28a745);
             height: 100%;
-            border-radius: 20px;
+            border-radius: 12px;
             transition: width 1s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: relative;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             color: white;
             font-weight: bold;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        
+        .congratulations-message {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+            color: white;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            animation: congratulationsSlide 0.6s ease-out;
+        }
+        
+        .congratulations-content {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .congratulations-icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+        
+        .congratulations-message h3 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .congratulations-message p {
+            font-size: 1.1rem;
+            margin: 0;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+        
+        @keyframes congratulationsSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
         }
         
         .credits-info {
@@ -71,43 +137,87 @@
             color: #6c757d;
         }
         
+        .semester-header {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.3s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .semester-header td {
+            background-color: var(--utec-secondary) !important;
+            color: white !important;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px !important;
+            font-size: 1.1rem;
+            position: relative;
+            border-bottom: 1px solid var(--utec-secondary) !important;
+        }
+        
+        .semester-header:hover td {
+            background-color: var(--utec-primary) !important;
+        }
+        
+        .semester-arrow {
+            display: inline-block;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .semester-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .semester-subjects {
+            transition: opacity 0.3s ease;
+        }
+        
+        .semester-subjects.collapsed {
+            display: none;
+        }
+        
         .btn-refresh {
-            background: linear-gradient(135deg, var(--utec-accent), #0056b3);
-            color: black;
-            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--utec-primary), var(--utec-secondary));
+            color: white;
+            padding: 14px 28px;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 6px rgba(0, 86, 179, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 173, 224, 0.3);
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn-refresh:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 86, 179, 0.4);
-            background: linear-gradient(135deg, #0056b3, var(--utec-accent));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 173, 224, 0.4);
+            background: linear-gradient(135deg, var(--utec-dark), var(--utec-primary));
         }
         
         .btn-refresh:active {
             transform: translateY(0);
-            box-shadow: 0 2px 6px rgba(0, 86, 179, 0.3);
+            box-shadow: 0 2px 8px rgba(0, 173, 224, 0.3);
         }
         
         .btn-refresh:disabled {
-            background: linear-gradient(135deg, #ccc, #999);
+            background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
             cursor: not-allowed;
             transform: none;
-            box-shadow: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            opacity: 0.7;
         }
         
         .btn-refresh:disabled:hover {
             transform: none;
-            box-shadow: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
         }
         
         .subject-not-taken {
@@ -209,6 +319,25 @@
                 margin-bottom: 10px;
             }
             
+            .congratulations-message {
+                padding: 20px 15px;
+                margin: 15px 0;
+            }
+            
+            .congratulations-icon {
+                font-size: 2.5rem;
+                margin-bottom: 10px;
+            }
+            
+            .congratulations-message h3 {
+                font-size: 1.4rem;
+                margin-bottom: 8px;
+            }
+            
+            .congratulations-message p {
+                font-size: 1rem;
+            }
+            
             .plan-switcher {
                 margin-bottom: 15px;
             }
@@ -226,6 +355,19 @@
             
             .refresh-info {
                 text-align: center;
+            }
+            
+            /* Responsive styles for semester headers */
+            .semester-header td {
+                padding: 12px 8px !important;
+                font-size: 1rem;
+                background-color: #00c7ff !important; /* Using hex value directly for mobile */
+                color: white !important;
+            }
+            
+            .semester-arrow {
+                font-size: 0.9rem;
+                margin-right: 5px;
             }
         }
         
@@ -251,6 +393,21 @@
                 padding: 6px 2px;
             }
             
+            /* Even smaller screens - semester headers */
+            .semester-header td {
+                padding: 10px 5px !important;
+                font-size: 0.9rem;
+                background-color: #00c7ff !important; /* Using hex value directly for mobile */
+                color: white !important;
+                font-weight: bold;
+            }
+            
+            .semester-arrow {
+                font-size: 0.8rem;
+                margin-right: 3px;
+                color: white !important;
+            }
+            
             .btn-refresh {
                 font-size: 0.9rem;
                 padding: 10px 16px;
@@ -260,6 +417,26 @@
                 width: 98%;
                 margin: 15% auto;
                 padding: 15px;
+            }
+            
+            .congratulations-message {
+                padding: 15px 10px;
+                margin: 10px 0;
+            }
+            
+            .congratulations-icon {
+                font-size: 2rem;
+                margin-bottom: 8px;
+            }
+            
+            .congratulations-message h3 {
+                font-size: 1.2rem;
+                margin-bottom: 6px;
+            }
+            
+            .congratulations-message p {
+                font-size: 0.9rem;
+                line-height: 1.4;
             }
         }
     </style>
@@ -299,15 +476,25 @@
                             </div>
                             <div class="refresh-info" id="refreshInfo">
                                 <button class="btn-refresh" id="refreshButton" onclick="showPasswordModal()">
-                                    Actualizar ahora (<span id="refreshesLeft">2</span> disponibles)
+                                    Actualizar ahora
                                 </button>
+                                <br>
+                                <div id="refreshesLeft" style="display: inline;">2</div> disponibles
                             </div>
                         </div>
                     </div>
                     
                     <div class="progress-bar-container">
-                        <div class="progress-bar" id="progressBar" style="width: 0%;">
-                            <span id="progressText" style="font-size: 1.2rem; font-weight: bold; color: white;">0%</span>
+                        <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                    
+                    <!-- Congratulations message for 100% completion -->
+                    <div class="congratulations-message" id="congratulationsMessage" style="display: none;">
+                        <div class="congratulations-content">
+                            <div class="congratulations-icon">🎓</div>
+                            <h3>¡Felicitaciones Licenciado/a!</h3>
+                            <p>Has completado el 100% de los créditos requeridos para la Licenciatura en Tecnologías de la Información</p>
                         </div>
                     </div>
                     
@@ -331,7 +518,7 @@
                     </p>
                 </div>
                 
-                <div style="background-color: var(--bg-light); padding: 30px; border-radius: 10px; margin-top: 30px;">
+                <div id="subjectsSection" style="background-color: var(--bg-light); padding: 30px; border-radius: 10px; margin-top: 30px;">
                     <h3 style="color: var(--utec-dark); margin-bottom: 20px;">
                         Asignaturas del Expediente
                     </h3>
@@ -340,7 +527,6 @@
                         <table class="subjects-table" id="subjectsTable">
                             <thead>
                                 <tr>
-                                    <th>Semestre</th>
                                     <th>Asignatura</th>
                                     <th>Créditos</th>
                                     <th>Tipo</th>
@@ -405,6 +591,60 @@
     </div>
 
     <%- include('partials/footer', { marginTop: '100px', showTerms: true, session: session }) %>
+
+    <!-- AI Assistant Widget -->
+    <div id="assistant-overlay"></div>
+
+    <div id="assistant-widget">
+        <button id="assistant-toggle" title="Asistente de IA">🤖</button>
+        <div id="assistant-popup">
+            <div id="assistant-header">
+                <h3>
+                    🤖 Asistente LTI.UY
+                </h3>
+                <div id="assistant-header-buttons">
+                    <button id="assistant-history-btn" title="Historial de chat">📜</button>
+                    <button id="assistant-new-chat" title="Nueva conversación">➕</button>
+                    <button id="assistant-close" title="Cerrar">×</button>
+                </div>
+            </div>
+            <div id="assistant-messages">
+                <div class="assistant-empty-state">
+                    <div class="assistant-empty-icon">💬</div>
+                    <h4>¡Hola! Soy tu asistente de LTI.UY</h4>
+                    <p>Pregúntame sobre tu progreso académico, materias, créditos, planes de carrera o cualquier duda sobre UTEC.</p>
+                </div>
+            </div>
+            <form id="assistant-form">
+                <input type="text" id="assistant-input" placeholder="Escribe tu pregunta aquí..." autocomplete="off" />
+                <button type="submit" id="assistant-send">Enviar</button>
+            </form>
+
+            <!-- AI Disclaimer -->
+            <div id="assistant-disclaimer">
+                <span>⚠️ Los datos generados por la IA pueden tener errores, siempre corroborarlos. Usando modelo Gemini 2.0 flash</span>
+            </div>
+
+            <!-- History Panel -->
+            <div id="assistant-history-panel">
+                <div id="assistant-history-header">
+                    <h3>
+                        📜 Historial de Chat
+                    </h3>
+                    <div>
+                        <button id="assistant-clear-history" title="Limpiar historial">🗑️</button>
+                        <button id="assistant-history-close" title="Cerrar historial">×</button>
+                    </div>
+                </div>
+                <div id="assistant-history-list">
+                    <div class="history-empty">
+                        <div class="history-empty-icon">💬</div>
+                        <p>No hay conversaciones anteriores</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const userHash = '<%= session.userHash %>';
@@ -502,10 +742,12 @@
                         displayProgress(data.data);
                         updateRefreshButton(data.canManualRefresh, data.manualRefreshesLeft);
                         document.getElementById('progressContent').style.display = 'block';
+                        document.getElementById('subjectsSection').style.display = 'block';
                     } else {
                         studentProgress = null;
                         displayProgress(null);
                         document.getElementById('progressContent').style.display = 'block';
+                        document.getElementById('subjectsSection').style.display = 'block';
                         if (data.canManualRefresh !== undefined) {
                             updateRefreshButton(data.canManualRefresh, data.manualRefreshesLeft);
                             updateFetchDataButton(data.canManualRefresh, data.manualRefreshesLeft);
@@ -513,10 +755,59 @@
                     }
                     
                     if (data.needsUpdate) {
-                        document.getElementById('updateStatus').textContent = 
-                            'Los datos se están actualizando en segundo plano...';
-                        // Check again in 30 seconds
-                        setTimeout(loadAcademicProgress, 30000);
+                        // Si es la primera vez y no hay datos, ocultar todo excepto el loading
+                        if (!data.data) {
+                            document.getElementById('progressContent').style.display = 'none';
+                            document.getElementById('noDataMessage').style.display = 'none';
+                            document.getElementById('subjectsSection').style.display = 'none';
+                            document.getElementById('loadingIndicator').style.display = 'block';
+                            document.getElementById('loadingIndicator').innerHTML = '<p>Obteniendo datos académicos...</p><div class="spinner"></div>';
+                        }
+                        
+                        // Timeout para mostrar mensaje de error después de 20 segundos
+                        const errorTimeout = setTimeout(() => {
+                            if (!data.data) {
+                                document.getElementById('loadingIndicator').innerHTML = `
+                                    <div style="text-align: center; color: #d32f2f; padding: 20px;">
+                                        <h3 style="color: #d32f2f; margin-bottom: 15px;">⚠️ Error de Conexión</h3>
+                                        <p style="margin-bottom: 15px;">No estamos logrando entrar al portal académico, intenta en unos minutos</p>
+                                        <button class="btn-refresh" onclick="window.location.reload()" style="background: #d32f2f; color: white;">
+                                            Intentar Nuevamente
+                                        </button>
+                                    </div>
+                                `;
+                                if (window.checkInterval) {
+                                    clearInterval(window.checkInterval);
+                                }
+                            }
+                        }, 20000);
+                        
+                        // Check again in 3 seconds for quicker updates
+                        window.checkInterval = setInterval(() => {
+                            fetch(`/auth/academic-progress/${userHash}`)
+                                .then(response => response.json())
+                                .then(newData => {
+                                    if (newData.success && newData.data && !data.data) {
+                                        // Los datos se obtuvieron por primera vez, recargar la página
+                                        clearInterval(window.checkInterval);
+                                        clearTimeout(errorTimeout);
+                                        window.location.reload();
+                                    } else if (newData.success && newData.data) {
+                                        // Los datos ya existían, solo actualizar
+                                        clearInterval(window.checkInterval);
+                                        clearTimeout(errorTimeout);
+                                        loadAcademicProgress();
+                                    } else if (!newData.needsUpdate) {
+                                        // Ya no se necesita actualizar, parar el intervalo
+                                        clearInterval(window.checkInterval);
+                                        clearTimeout(errorTimeout);
+                                        loadAcademicProgress();
+                                    }
+                                })
+                                .catch(() => {
+                                    // En caso de error, continuar intentando
+                                });
+                        }, 3000);
                     }
                 })
                 .catch(error => {
@@ -620,7 +911,7 @@
                 // Show no data message
                 const row = tbody.insertRow();
                 const cell = row.insertCell(0);
-                cell.colSpan = 6;
+                cell.colSpan = 5;
                 cell.style.textAlign = 'center';
                 cell.style.padding = '40px';
                 cell.style.color = '#666';
@@ -631,45 +922,76 @@
                     .filter(subject => !subject.name.toLowerCase().includes('optativa'))
                     .sort((a, b) => a.semester - b.semester);
                 
-                sortedSubjects.forEach(planSubject => {
-                    const row = tbody.insertRow();
-                    
-                    // Find if this subject is in the student's progress
-                    let studentSubject = null;
-                    if (data && data.subjects) {
-                        studentSubject = data.subjects.find(s => {
-                            const portalName = normalizeSubjectName(s.name);
-                            const planName = normalizeSubjectName(planSubject.name);
-                            
-                            // Exact normalized comparison
-                            if (portalName === planName) return true;
-                            
-                            // Special comparison for English subjects
-                            if (matchEnglishSubject(s.name, planSubject.name)) return true;
-                            
-                            return false;
-                        });
+                // Group subjects by semester
+                const subjectsBySemester = {};
+                sortedSubjects.forEach(subject => {
+                    if (!subjectsBySemester[subject.semester]) {
+                        subjectsBySemester[subject.semester] = [];
                     }
-                    
-                    // Track matched subjects
-                    if (studentSubject) {
-                        matchedSubjects.push(studentSubject);
-                    }
-                    
-                    // Set row class based on whether subject is taken
-                    if (studentSubject) {
-                        row.className = 'subject-taken';
-                    } else {
-                        row.className = 'subject-not-taken';
-                    }
-                    
-                    row.insertCell(0).textContent = planSubject.semester;
-                    row.insertCell(1).textContent = planSubject.name;
-                    row.insertCell(2).textContent = planSubject.credits;
-                    row.insertCell(3).textContent = studentSubject ? studentSubject.type : '-';
-                    row.insertCell(4).textContent = studentSubject ? (studentSubject.convocatoria || '-') : '-';
-                    row.insertCell(5).textContent = studentSubject ? (studentSubject.grade || '-') : '-';
+                    subjectsBySemester[subject.semester].push(subject);
                 });
+                
+                // Render subjects grouped by semester
+                Object.keys(subjectsBySemester).sort((a, b) => parseInt(a) - parseInt(b)).forEach(semester => {
+                    // Add semester header row
+                    const headerRow = tbody.insertRow();
+                    headerRow.className = 'semester-header';
+                    headerRow.setAttribute('data-semester', semester);
+                    const headerCell = headerRow.insertCell(0);
+                    headerCell.colSpan = 5;
+                    headerCell.innerHTML = `<span class="semester-arrow">▼</span>Semestre ${semester}`;
+                    
+                    // Add click event to toggle semester
+                    headerRow.onclick = function() {
+                        toggleSemester(semester);
+                    };
+                    
+                    // Add subjects for this semester
+                    subjectsBySemester[semester].forEach(planSubject => {
+                        const row = tbody.insertRow();
+                        row.className = `semester-${semester}-subject semester-subjects`;
+                        
+                        // Find if this subject is in the student's progress
+                        let studentSubject = null;
+                        if (data && data.subjects) {
+                            studentSubject = data.subjects.find(s => {
+                                const portalName = normalizeSubjectName(s.name);
+                                const planName = normalizeSubjectName(planSubject.name);
+                                
+                                // Exact normalized comparison
+                                if (portalName === planName) return true;
+                                
+                                // Special comparison for English subjects
+                                if (matchEnglishSubject(s.name, planSubject.name)) return true;
+                                
+                                return false;
+                            });
+                        }
+                        
+                        // Track matched subjects
+                        if (studentSubject) {
+                            matchedSubjects.push(studentSubject);
+                        }
+                        
+                        // Set row class based on whether subject is taken
+                        if (studentSubject) {
+                            row.className += ' subject-taken';
+                        } else {
+                            row.className += ' subject-not-taken';
+                        }
+                        
+                        row.insertCell(0).textContent = planSubject.name;
+                        row.insertCell(1).textContent = planSubject.credits;
+                        row.insertCell(2).textContent = studentSubject ? studentSubject.type : '-';
+                        row.insertCell(3).textContent = studentSubject ? (studentSubject.convocatoria || '-') : '-';
+                        row.insertCell(4).textContent = studentSubject ? (studentSubject.grade || '-') : '-';
+                    });
+                });
+                
+                // Restore collapsed states after table is rendered
+                setTimeout(() => {
+                    restoreSemesterStates();
+                }, 0);
             }
             
             // Update additional subjects table (subjects not in career plan)
@@ -682,6 +1004,11 @@
                 const additionalSubjects = data.subjects.filter(studentSubject => {
                     // Exclude if it matches a subject in the career plan
                     if (matchedSubjects.some(matched => matched.name === studentSubject.name)) {
+                        return false;
+                    }
+                    
+                    // Exclude OBLIGATORIA subjects - these should only be in the main table
+                    if (studentSubject.type && studentSubject.type.toUpperCase() === 'OBLIGATORIA') {
                         return false;
                     }
                     
@@ -718,34 +1045,19 @@
             }
             
             // Calculate and update credits info including additional subjects
-            let totalCreditsFromData = data ? data.totalCredits : 0;
-            let additionalCredits = 0;
-            
+            // Calculate total credits from all approved subjects
+            let totalCreditsFromData = 0;
             if (data && data.subjects) {
-                const additionalSubjects = data.subjects.filter(studentSubject => {
-                    // Exclude if it matches a subject in the career plan
-                    if (matchedSubjects.some(matched => matched.name === studentSubject.name)) {
-                        return false;
-                    }
-                    
-                    // Exclude English subjects and Vinculación con el Medio
-                    const subjectName = studentSubject.name.toLowerCase();
-                    if (subjectName.includes('inglés') || subjectName.includes('ingles') || subjectName.includes('english')) {
-                        return false;
-                    }
-                    if (subjectName.includes('vinculación con el medio') || subjectName.includes('vinculacion con el medio')) {
-                        return false;
-                    }
-                    
-                    return true;
-                });
-                
-                additionalCredits = additionalSubjects.reduce((sum, subject) => sum + (subject.credits || 0), 0);
+                totalCreditsFromData = data.subjects.reduce((sum, subject) => {
+                    // Only count subjects that have credits (are approved)
+                    return sum + (subject.credits || 0);
+                }, 0);
             }
             
-            // Update credits info with total including additional subjects
-            const totalCreditsWithAdditional = totalCreditsFromData + additionalCredits;
-            const requiredCredits = data ? data.requiredCredits : (currentCareerPlan ? currentCareerPlan.totalCredits : 0);
+            // Update credits info - totalCreditsFromData now includes ALL subjects
+            const totalCreditsWithAdditional = totalCreditsFromData;
+            // Fixed required credits for LTI career
+            const requiredCredits = 360;
             
             // Calculate progress percentage, capping at 100%
             if (requiredCredits > 0) {
@@ -755,6 +1067,14 @@
             // Update progress bar
             progressFill.style.width = progressPercentage + '%';
             progressText.textContent = Math.round(progressPercentage) + '%';
+            
+            // Show congratulations message if 100% complete
+            const congratulationsMessage = document.getElementById('congratulationsMessage');
+            if (Math.round(progressPercentage) >= 100) {
+                congratulationsMessage.style.display = 'block';
+            } else {
+                congratulationsMessage.style.display = 'none';
+            }
             
             // Update credits display
             document.getElementById('totalCredits').textContent = totalCreditsWithAdditional;
@@ -793,6 +1113,63 @@
                     button.textContent = 'Límite de actualizaciones alcanzado';
                 }
             }
+        }
+        
+        function toggleSemester(semester) {
+            const headerRow = document.querySelector(`tr[data-semester="${semester}"]`);
+            const subjectRows = document.querySelectorAll(`.semester-${semester}-subject`);
+            const arrow = headerRow.querySelector('.semester-arrow');
+            
+            // Get current collapsed states from localStorage
+            let collapsedStates = JSON.parse(localStorage.getItem('semesterCollapsedStates') || '{}');
+            
+            if (arrow.classList.contains('collapsed')) {
+                // Expand
+                arrow.classList.remove('collapsed');
+                arrow.textContent = '▼';
+                subjectRows.forEach(row => {
+                    row.classList.remove('collapsed');
+                });
+                // Update localStorage
+                collapsedStates[semester] = false;
+            } else {
+                // Collapse
+                arrow.classList.add('collapsed');
+                arrow.textContent = '▶';
+                subjectRows.forEach(row => {
+                    row.classList.add('collapsed');
+                });
+                // Update localStorage
+                collapsedStates[semester] = true;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('semesterCollapsedStates', JSON.stringify(collapsedStates));
+        }
+        
+        function restoreSemesterStates() {
+            // Get collapsed states from localStorage
+            const collapsedStates = JSON.parse(localStorage.getItem('semesterCollapsedStates') || '{}');
+            
+            // Apply saved states to each semester
+            Object.keys(collapsedStates).forEach(semester => {
+                if (collapsedStates[semester] === true) {
+                    const headerRow = document.querySelector(`tr[data-semester="${semester}"]`);
+                    if (headerRow) {
+                        const subjectRows = document.querySelectorAll(`.semester-${semester}-subject`);
+                        const arrow = headerRow.querySelector('.semester-arrow');
+                        
+                        if (arrow) {
+                            arrow.classList.add('collapsed');
+                            arrow.textContent = '▶';
+                        }
+                        
+                        subjectRows.forEach(row => {
+                            row.classList.add('collapsed');
+                        });
+                    }
+                }
+            });
         }
         
         function showPasswordModal() {
@@ -859,8 +1236,6 @@
                             </button>
                         </div>
                     `;
-                    
-                    alert('Progreso académico actualizado exitosamente');
                 } else {
                     // Show error and restore the content
                     document.getElementById('progressContent').style.display = 'block';
@@ -898,5 +1273,7 @@
             }
         });
     </script>
+    
+    <script src="/js/main.js"></script>
 </body>
 </html>

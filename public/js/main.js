@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Restore username for convenience (but not password)
                     usernameInput.value = username;
                     
-                    showErrorModal(data.message || 'Credenciales inválidas');
+                    showErrorModal(data.message || 'Credenciales inválidas', data);
                 }
             } catch (error) {
                 // Reset button state
@@ -82,14 +82,123 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function showErrorModal(message) {
+function showErrorModal(message, data = {}) {
     const errorModal = document.getElementById('errorModal');
     const errorMessage = document.getElementById('errorMessage');
+    const errorTitle = document.getElementById('errorTitle');
+    const blockInfo = document.getElementById('blockInfo');
+    const blockMessage = document.getElementById('blockMessage');
+    const countdownTimer = document.getElementById('countdownTimer');
+    const modalContent = document.querySelector('#errorModal .modal-content');
+    const modalButtonText = document.getElementById('modalButtonText');
+    const submitButton = document.getElementById('submitButton');
+    
     if (errorMessage) {
         errorMessage.textContent = message;
     }
+    
+    // Handle blocked users
+    if (data.isBlocked && data.blockExpiresAt) {
+        if (errorTitle) {
+            errorTitle.textContent = 'Cuenta Bloqueada';
+            errorTitle.style.color = 'var(--error)';
+        }
+        
+        if (modalContent) {
+            modalContent.classList.add('blocked');
+        }
+        
+        if (blockInfo && blockMessage && countdownTimer) {
+            blockInfo.style.display = 'block';
+            blockMessage.textContent = `Tu cuenta está bloqueada temporalmente por intentos de login fallidos.`;
+            
+            const blockExpiresAt = new Date(data.blockExpiresAt);
+            
+            // Function to calculate remaining time dynamically
+            const calculateRemainingTime = () => {
+                const now = new Date();
+                const timeLeft = Math.max(0, Math.ceil((blockExpiresAt - now) / 1000));
+                return timeLeft;
+            };
+            
+            let timeLeft = calculateRemainingTime();
+            updateCountdown(timeLeft, countdownTimer);
+            
+            // Update countdown every second with real-time calculation
+            const countdownInterval = setInterval(() => {
+                timeLeft = calculateRemainingTime();
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    closeModal();
+                    // Re-enable the submit button when countdown ends
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                } else {
+                    updateCountdown(timeLeft, countdownTimer);
+                }
+            }, 1000);
+        }
+        
+        if (modalButtonText) {
+            modalButtonText.textContent = 'Entendido';
+        }
+    } else {
+        // Regular error handling
+        if (errorTitle) {
+            errorTitle.textContent = 'Error de Autenticación';
+            errorTitle.style.color = 'var(--error)';
+        }
+        
+        if (modalContent) {
+            modalContent.classList.remove('blocked');
+        }
+        
+        if (blockInfo) {
+            blockInfo.style.display = 'none';
+        }
+        
+        if (modalButtonText) {
+            modalButtonText.textContent = 'Intentar nuevamente';
+        }
+        
+        // Show remaining attempts if available
+        if (data.remainingAttempts !== undefined) {
+            showAttemptAlert(data.remainingAttempts);
+        }
+    }
+    
     if (errorModal) {
         errorModal.style.display = 'block';
+    }
+}
+
+function updateCountdown(seconds, element) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const timeString = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    element.textContent = `Tiempo restante: ${timeString}`;
+}
+
+function showAttemptAlert(remainingAttempts) {
+    const attemptAlert = document.getElementById('attemptAlert');
+    const attemptMessage = document.getElementById('attemptMessage');
+    
+    if (attemptAlert && attemptMessage) {
+        attemptAlert.style.display = 'block';
+        
+        if (remainingAttempts <= 1) {
+            attemptAlert.className = 'attempt-alert error';
+            attemptMessage.textContent = `⚠️ Último intento restante. Tu cuenta será bloqueada si fallas nuevamente.`;
+        } else {
+            attemptAlert.className = 'attempt-alert warning';
+            attemptMessage.textContent = `Tienes ${remainingAttempts} intentos restantes antes de que tu cuenta sea bloqueada.`;
+        }
+        
+        // Hide alert after 5 seconds
+        setTimeout(() => {
+            attemptAlert.style.display = 'none';
+        }, 5000);
     }
 }
 
@@ -126,31 +235,353 @@ function initializeAssistant() {
     const clearHistoryBtn = document.getElementById('assistant-clear-history');
     const historyList = document.getElementById('assistant-history-list');
 
-    // Debug: Check if elements exist
-    console.log('Assistant elements:', {
-        toggleBtn: !!toggleBtn,
-        popup: !!popup,
-        overlay: !!overlay,
-        closeBtn: !!closeBtn,
-        form: !!form,
-        input: !!input,
-        messages: !!messages
-    });
-
     // Only initialize if elements exist (user is authenticated)
     if (!toggleBtn || !popup || !overlay) {
-        console.log('Assistant elements not found, user probably not authenticated');
         return;
     }
 
     // Current session state
     let currentSessionId = null;
 
+    // Function to get user context from the page
+    function getUserContext() {
+        const context = {
+            user: {
+                username: '',
+                registrationDate: null,
+                selectedPlan: 'No seleccionado',
+                lastDataUpdate: null,
+                manualRefreshCount: 0
+            },
+            academicProgress: null,
+            careerPlans: {
+                available: [],
+                selected: null
+            },
+            utecInfo: {
+                institution: 'Universidad Tecnológica del Uruguay (UTEC)',
+                career: 'Licenciatura en Tecnologías de la Información (LTI)',
+                platform: 'LTI.UY - Plataforma no oficial para estudiantes de LTI',
+                platformCreators: 'Bruno Silveira, José Faller y Mariano Collazo (Licenciados en TI de UTEC)',
+                platformFeatures: [
+                    'Información y Servicios: Encuentra información de la carrera, hoteles, taxis y servicios útiles de las diferentes sedes de UTEC',
+                    'Seguimiento de Progreso: Visualiza tu avance en la carrera y mantén un registro de tus calificaciones y créditos',
+                    'Acceso Seguro: Utiliza tus credenciales de UTEC para acceder. No almacenamos ningún dato personal',
+                    'Asistente IA V2.0: Nuevo asistente virtual integrado que te ayuda con consultas académicas, información sobre materias y dudas sobre LTI y UTEC'
+                ],
+                utecSites: {
+                    portalAcademico: {
+                        description: 'Accede a tu información académica oficial',
+                        links: ['https://portal.utec.edu.uy', 'https://portaluxxi.utec.edu.uy', 'https://apps.utec.edu.uy/jsloader/ac/matricula#/acceso/bienvenida (Matrículas)']
+                    },
+                    plataformasAprendizaje: {
+                        description: 'Recursos educativos y entornos virtuales',
+                        links: ['https://ev1.utec.edu.uy (EVA/Moodle)', 'https://edu.utec.edu.uy (EDU)', 'https://airtable.com/shrm963356m0de6lj/tblUnEnOv4jH2Ovgk (Inscripción APEs)', 'https://taa.utec.edu.uy (TAA)', 'https://scaleup.utec.edu.uy (Aulas Scale Up)']
+                    },
+                    herramientasAcademicas: {
+                        description: 'Gestión de cuenta y recursos digitales',
+                        links: ['https://pwm.utec.edu.uy (Gestión de Cuenta)', 'https://red.utec.edu.uy (Recursos Digitales)']
+                    },
+                    soporteServicios: {
+                        description: 'Ayuda técnica y servicios estudiantiles',
+                        links: ['https://mds.utec.edu.uy (Mesa de Servicio)', 'https://mda.utec.edu.uy (Mesa de Ayuda)', 'https://erp.utec.edu.uy/jobs (Ofertas Laborales)', 'https://utec.netlanguages.com/utec/login.php (Net Languages)']
+                    },
+                    desarrolloTecnologia: {
+                        description: 'Plataformas de desarrollo y testing',
+                        links: ['https://git.utec.edu.uy (Git UTEC)', 'https://aichallenge.utec.edu.uy (AI Challenge)', 'https://mantis.utec.edu.uy (Mantis Bug Tracker)', 'https://testlink.utec.edu.uy (Testlink)']
+                    },
+                    sitioOficial: {
+                        description: 'Información general e inscripciones',
+                        links: ['https://utec.edu.uy (Página Principal)', 'https://descubri.utec.edu.uy (Descubrí UTEC)']
+                    }
+                },
+                careerRequirements: {
+                    connectivity: 'Conexión a internet estable para acceder a recursos digitales y plataformas virtuales',
+                    hardware: {
+                        os: 'Windows 64 bits (macOS y Linux compatibles)',
+                        ram: '16 GB mínimo, 32-64 GB recomendado',
+                        processor: 'Con capacidad de virtualización',
+                        storage: '1 TB mínimo',
+                        extras: 'Webcam y micrófono'
+                    },
+                    previaturas: 'Revisa constantemente las materias aprobadas y habilitaciones para evitar retrasos'
+                },
+                admission: {
+                    quotaDistribution: {
+                        interior: '90% de los cupos para estudiantes del interior del país',
+                        montevideo: '10% de los cupos para estudiantes de Montevideo',
+                        gender: '50% varones, 50% mujeres'
+                    },
+                    mobilityRestrictions: 'No podrán solicitar cambio de sede hasta obtener al menos la titulación intermedia',
+                    inscriptionPeriod: 'Anualmente entre noviembre y diciembre',
+                    requiredDocuments: [
+                        'Constancia de domicilio expedida por el Ministerio del Interior (últimos 12 meses)',
+                        'Cédula de Identidad vigente',
+                        'Carné de salud vigente',
+                        'Pase de la institución habilitante: Fórmula 69A o Constancia de Egreso',
+                        'Carta motivación explicando por qué querés estudiar la carrera'
+                    ]
+                },
+                presentialInstances: {
+                    schedule: 'Principalmente en el último mes de cada semestre',
+                    frequency: '5 a 7 instancias en diferentes horarios',
+                    duration: 'Jornadas de día completo o medio día, en el rango de 9 a 17 horas',
+                    purpose: 'Evaluación de cursos y proyectos',
+                    additionalActivities: 'Actividades de complementación de cursos, vinculación con el medio empresarial'
+                },
+                sedes: {
+                    durazno: {
+                        name: 'ITR SO (Durazno)',
+                        email: 'secretaria.lti.itrso@utec.edu.uy',
+                        services: {
+                            hotels: ['Hotel Durazno: 4362 2040', 'Hotel Santa Cristina: 4362 2525 / 094 161 111', 'Plaza Apart Hotel: 4362 9999', 'Patio Sarandí: 4363 1303', 'Hotel Central: 4362 0305'],
+                            taxis: ['Radio Taxi La Paz: 4362 9090', 'Taxi Penza: 4362 0850', '4362 1031 / 4362 1001']
+                        }
+                    },
+                    frayBentos: {
+                        name: 'ITR CS (Fray Bentos)',
+                        email: 'secretaria.lti.itrcs@utec.edu.uy',
+                        services: {
+                            hotels: ['Gran Hotel Fray Bentos: 4562 0566', 'Plaza Hotel Fray Bentos: 4562 2363', 'Hotel 25 de Mayo: 4562 2586', 'Suculento Apart: Ver en Booking.com'],
+                            taxis: ['City Taxi: 4562 5050', 'Taxi 1313: 4562 1313 / 099 563 963', '4562 7057 / 4562 2121']
+                        }
+                    },
+                    minas: {
+                        name: 'Minas',
+                        email: 'secretaria.lti.minas@utec.edu.uy'
+                    },
+                    melo: {
+                        name: 'Melo',
+                        email: 'secretaria.lti.melo@utec.edu.uy'
+                    }
+                },
+                frequentQuestions: {
+                    matriculation: 'Video explicativo disponible en la plataforma para matricularse a las materias',
+                    platformOwnership: 'Este proyecto es realizado por estudiantes recibidos de la UTEC, para estudiantes de la UTEC. No es oficial de UTEC.',
+                    graduation: {
+                        requestPeriods: 'Mayo y noviembre de cada año',
+                        process: 'Solicitud a través del ESPACIO COLABORATIVO anual del EVA',
+                        requirements: [
+                            'Verificar total de créditos obtenidos y unidades curriculares aprobadas',
+                            'Certificado de nivel de inglés requerido',
+                            'Cédula de identidad vigente',
+                            'Carné de salud vigente'
+                        ],
+                        important: 'El nombre en el título será exactamente igual al de la cédula de identidad'
+                    }
+                },
+                legalDisclaimer: 'Todos los logotipos, marcas, imágenes, textos y demás elementos son propiedad exclusiva de UTEC. Este sitio tiene como cometido facilitar información y reunir a los diferentes actores involucrados en la carrera LTI.'
+            }
+        };
+
+        // Try to get data from global variables if they exist (from welcome.ejs)
+        if (typeof studentProgress !== 'undefined' && studentProgress) {
+            // Get the real total credits from DOM (includes both tables)
+            const totalCreditsEl = document.getElementById('totalCredits');
+            const realTotalCredits = totalCreditsEl ? parseInt(totalCreditsEl.textContent) || 0 : studentProgress.totalCredits || 0;
+            const requiredCredits = studentProgress.requiredCredits || 360;
+            
+            // Calculate progress percentage (max 100%)
+            const rawPercentage = (realTotalCredits / requiredCredits) * 100;
+            const progressPercentage = Math.min(100, Math.round(rawPercentage));
+            
+            // Separate subjects by type
+            const planSubjects = studentProgress.subjects || [];
+            const additionalSubjects = [];
+            
+            // Get additional subjects from the additional subjects table
+            const additionalRows = document.querySelectorAll('#additionalSubjectsTable tbody tr');
+            if (additionalRows.length > 0) {
+                additionalRows.forEach(row => {
+                    if (row.cells.length >= 5) {
+                        const subject = {
+                            name: row.cells[0].textContent.trim(),
+                            credits: parseInt(row.cells[1].textContent) || 0,
+                            type: row.cells[2].textContent.trim(),
+                            convocatoria: row.cells[3].textContent.trim(),
+                            grade: row.cells[4].textContent.trim(),
+                            passed: row.classList.contains('subject-passed'),
+                            isAdditional: true
+                        };
+                        additionalSubjects.push(subject);
+                    }
+                });
+            }
+            
+            // Include full academic progress data with better structure
+            context.academicProgress = {
+                // Credit summary
+                creditsSummary: {
+                    totalEarned: realTotalCredits,
+                    requiredForGraduation: requiredCredits,
+                    progressPercentage: progressPercentage,
+                    remainingCredits: Math.max(0, requiredCredits - realTotalCredits),
+                    surplusCredits: Math.max(0, realTotalCredits - requiredCredits),
+                    hasCompletedRequirements: realTotalCredits >= requiredCredits
+                },
+                
+                // Subjects from the career plan
+                planSubjects: {
+                    subjects: planSubjects,
+                    total: planSubjects.length,
+                    passed: planSubjects.filter(s => s.passed).length,
+                    pending: planSubjects.filter(s => !s.passed).length,
+                    creditsFromPlan: planSubjects.filter(s => s.passed).reduce((sum, s) => sum + (s.credits || 0), 0)
+                },
+                
+                // Additional subjects (electives, VME, APEs)
+                additionalSubjects: {
+                    subjects: additionalSubjects,
+                    total: additionalSubjects.length,
+                    passed: additionalSubjects.filter(s => s.passed).length,
+                    creditsFromAdditional: additionalSubjects.filter(s => s.passed).reduce((sum, s) => sum + (s.credits || 0), 0)
+                },
+                
+                // Combined totals
+                allSubjects: {
+                    total: planSubjects.length + additionalSubjects.length,
+                    passed: planSubjects.filter(s => s.passed).length + additionalSubjects.filter(s => s.passed).length,
+                    allSubjectsList: [...planSubjects, ...additionalSubjects]
+                },
+                
+                lastUpdated: studentProgress.lastUpdated || new Date()
+            };
+        }
+
+        if (typeof currentCareerPlan !== 'undefined' && currentCareerPlan) {
+            context.careerPlans.selected = currentCareerPlan;
+            context.user.selectedPlan = currentCareerPlan.name;
+        }
+
+        // Get all available career plans from the select element
+        const planSelect = document.getElementById('planSelect');
+        if (planSelect && planSelect.options.length > 1) {
+            context.careerPlans.available = [];
+            for (let i = 1; i < planSelect.options.length; i++) {
+                const option = planSelect.options[i];
+                const planName = option.textContent.split(' (')[0];
+                const creditsMatch = option.textContent.match(/\((\d+) créditos\)/);
+                const credits = creditsMatch ? parseInt(creditsMatch[1]) : 0;
+                
+                context.careerPlans.available.push({
+                    _id: option.value,
+                    name: planName,
+                    totalCredits: credits
+                });
+            }
+        }
+
+        // Try to get user info from DOM elements
+        const welcomeHeader = document.querySelector('.welcome-header h1');
+        if (welcomeHeader) {
+            const match = welcomeHeader.textContent.match(/¡Hola, (.+)!/);
+            if (match) {
+                context.user.username = match[1];
+            }
+        }
+
+        // Get progress info from DOM if not available from global vars
+        const totalCreditsEl = document.getElementById('totalCredits');
+        const requiredCreditsEl = document.getElementById('requiredCredits');
+        const remainingCreditsEl = document.getElementById('remainingCredits');
+        const progressBar = document.getElementById('progressBar');
+        
+        if (totalCreditsEl && requiredCreditsEl && remainingCreditsEl && !context.academicProgress) {
+            // If no academic progress from global var, try to construct from DOM
+            const totalCredits = parseInt(totalCreditsEl.textContent) || 0;
+            const requiredCredits = parseInt(requiredCreditsEl.textContent) || 360;
+            const remainingCredits = parseInt(remainingCreditsEl.textContent) || 360;
+            const rawPercentage = progressBar ? parseInt(progressBar.style.width) || 0 : 0;
+            const progressPercentage = Math.min(100, rawPercentage);
+            
+            const planSubjects = [];
+            const additionalSubjects = [];
+            
+            // Get subjects from main table (plan subjects)
+            const subjectsRows = document.querySelectorAll('#subjectsTable tbody tr');
+            subjectsRows.forEach(row => {
+                if (!row.classList.contains('semester-header') && row.cells.length >= 5) {
+                    const subject = {
+                        name: row.cells[0].textContent.trim(),
+                        credits: parseInt(row.cells[1].textContent) || 0,
+                        type: row.cells[2].textContent.trim(),
+                        convocatoria: row.cells[3].textContent.trim(),
+                        grade: row.cells[4].textContent.trim(),
+                        passed: row.classList.contains('subject-passed'),
+                        isAdditional: false
+                    };
+                    planSubjects.push(subject);
+                }
+            });
+            
+            // Get additional subjects from the second table
+            const additionalRows = document.querySelectorAll('#additionalSubjectsTable tbody tr');
+            additionalRows.forEach(row => {
+                if (row.cells.length >= 5) {
+                    const subject = {
+                        name: row.cells[0].textContent.trim(),
+                        credits: parseInt(row.cells[1].textContent) || 0,
+                        type: row.cells[2].textContent.trim(),
+                        convocatoria: row.cells[3].textContent.trim(),
+                        grade: row.cells[4].textContent.trim(),
+                        passed: row.classList.contains('subject-passed'),
+                        isAdditional: true
+                    };
+                    additionalSubjects.push(subject);
+                }
+            });
+            
+            context.academicProgress = {
+                // Credit summary
+                creditsSummary: {
+                    totalEarned: totalCredits,
+                    requiredForGraduation: requiredCredits,
+                    progressPercentage: progressPercentage,
+                    remainingCredits: Math.max(0, remainingCredits),
+                    surplusCredits: Math.max(0, totalCredits - requiredCredits),
+                    hasCompletedRequirements: totalCredits >= requiredCredits
+                },
+                
+                // Subjects from the career plan
+                planSubjects: {
+                    subjects: planSubjects,
+                    total: planSubjects.length,
+                    passed: planSubjects.filter(s => s.passed).length,
+                    pending: planSubjects.filter(s => !s.passed).length,
+                    creditsFromPlan: planSubjects.filter(s => s.passed).reduce((sum, s) => sum + (s.credits || 0), 0)
+                },
+                
+                // Additional subjects (electives, VME, APEs)
+                additionalSubjects: {
+                    subjects: additionalSubjects,
+                    total: additionalSubjects.length,
+                    passed: additionalSubjects.filter(s => s.passed).length,
+                    creditsFromAdditional: additionalSubjects.filter(s => s.passed).reduce((sum, s) => sum + (s.credits || 0), 0)
+                },
+                
+                // Combined totals
+                allSubjects: {
+                    total: planSubjects.length + additionalSubjects.length,
+                    passed: planSubjects.filter(s => s.passed).length + additionalSubjects.filter(s => s.passed).length,
+                    allSubjectsList: [...planSubjects, ...additionalSubjects]
+                },
+                
+                lastUpdated: new Date()
+            };
+        }
+
+        // Get refresh information
+        const refreshesLeftEl = document.getElementById('refreshesLeft');
+        if (refreshesLeftEl) {
+            context.user.manualRefreshCount = parseInt(refreshesLeftEl.textContent) || 0;
+        }
+
+        return context;
+    }
+
     // Toggle popup visibility
     toggleBtn.addEventListener('click', () => {
-        console.log('Assistant button clicked');
         const isVisible = popup.style.display === 'flex' || window.getComputedStyle(popup).display === 'flex';
-        console.log('Current popup display:', popup.style.display, 'isVisible:', isVisible);
         if (isVisible) {
             closeAssistant();
         } else {
@@ -160,14 +591,12 @@ function initializeAssistant() {
 
     // Close popup functions
     function closeAssistant() {
-        console.log('Closing assistant');
         popup.style.display = 'none';
         overlay.style.display = 'none';
         document.body.classList.remove('modal-open');
     }
 
     function openAssistant() {
-        console.log('Opening assistant');
         popup.style.display = 'flex';
         overlay.style.display = 'block';
         document.body.classList.add('modal-open');
@@ -213,25 +642,39 @@ function initializeAssistant() {
             input.value = '';
 
             // Add loading message
-            const loadingMsg = document.createElement('div');
-            loadingMsg.className = 'message assistant-message loading';
-            loadingMsg.innerHTML = `<div class="message-content">Pensando...</div>`;
-            messages.appendChild(loadingMsg);
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'message assistant-message loading';
+            assistantMsg.innerHTML = `
+                <div class="message-content">
+                    <span class="loading-text">Pensando</span>
+                    <span class="loading-dots">
+                        <span>.</span><span>.</span><span>.</span>
+                    </span>
+                </div>
+            `;
+            messages.appendChild(assistantMsg);
 
             // Scroll to bottom
             messages.scrollTop = messages.scrollHeight;
 
+            // Force DOM update before making the request
+            await new Promise(resolve => setTimeout(resolve, 10));
+
             try {
+                // Get current user context
+                const context = getUserContext();
+                console.log('📊 Contexto enviado al asistente:', context);
+                
                 const response = await fetch('/assistant', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ question, sessionId: currentSessionId })
+                    body: JSON.stringify({ question, sessionId: currentSessionId, context })
                 });
 
                 // Remove loading message
-                loadingMsg.remove();
+                assistantMsg.remove();
 
                 if (response.ok) {
                     const data = await response.json();
@@ -279,7 +722,7 @@ function initializeAssistant() {
                 }
             } catch (error) {
                 // Remove loading message
-                loadingMsg.remove();
+                assistantMsg.remove();
 
                 // Add error message
                 const errorMsg = document.createElement('div');
@@ -335,6 +778,16 @@ function initializeAssistant() {
     // History panel functions
     function showHistoryPanel() {
         if (historyPanel) {
+            // Ocultar el contenido del chat principal
+            const chatContent = document.getElementById('assistant-messages');
+            const chatForm = document.getElementById('assistant-form');
+            const chatDisclaimer = document.getElementById('assistant-disclaimer');
+            
+            if (chatContent) chatContent.style.display = 'none';
+            if (chatForm) chatForm.style.display = 'none';
+            if (chatDisclaimer) chatDisclaimer.style.display = 'none';
+            
+            // Mostrar el panel de historial
             historyPanel.style.display = 'flex';
             loadChatHistory();
         }
@@ -342,7 +795,17 @@ function initializeAssistant() {
 
     function hideHistoryPanel() {
         if (historyPanel) {
+            // Ocultar el panel de historial
             historyPanel.style.display = 'none';
+            
+            // Mostrar el contenido del chat principal
+            const chatContent = document.getElementById('assistant-messages');
+            const chatForm = document.getElementById('assistant-form');
+            const chatDisclaimer = document.getElementById('assistant-disclaimer');
+            
+            if (chatContent) chatContent.style.display = 'block';
+            if (chatForm) chatForm.style.display = 'flex';
+            if (chatDisclaimer) chatDisclaimer.style.display = 'block';
         }
     }
 
@@ -542,13 +1005,3 @@ function parseMarkdown(text) {
         .replace(/^\- (.+)$/gm, '<li>$1</li>')
         .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
 }
-
-// Debug: Check if assistant button exists after everything is loaded
-setTimeout(() => {
-    const btn = document.getElementById('assistant-toggle');
-    console.log('Final check - Assistant button exists:', !!btn);
-    if (btn) {
-        console.log('Button is visible:', btn.offsetParent !== null);
-        console.log('Button computed style display:', window.getComputedStyle(btn).display);
-    }
-}, 1000);

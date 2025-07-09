@@ -63,9 +63,39 @@ const logDataUpdate = async (username, ip, details) => {
   }
 };
 
+// Función para loguear bloqueo de usuario
+const logUserBlocked = async (username, ip, details) => {
+  try {
+    await Log.create({
+      type: 'userBlocked',
+      ip: ip,
+      username: username,
+      details: details
+    });
+  } catch (error) {
+    console.error('Error logging user blocked:', error);
+  }
+};
+
+// Función para loguear desbloqueo de usuario
+const logUserUnblocked = async (username, ip, details) => {
+  try {
+    await Log.create({
+      type: 'userUnblocked',
+      ip: ip,
+      username: username,
+      details: details
+    });
+  } catch (error) {
+    console.error('Error logging user unblocked:', error);
+  }
+};
+
 module.exports = {
   logPageVisit,
   logLoginAttempt,
   logDataUpdate,
+  logUserBlocked,
+  logUserUnblocked,
   getRealIP
 };

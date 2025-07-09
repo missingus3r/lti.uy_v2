@@ -9,15 +9,21 @@
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="navbar-brand">LTI.UY</a>
+            <a href="/" class="navbar-brand">
+                <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" class="navbar-logo">
+                LTI.UY
+            </a>
         </div>
     </nav>
 
     <div class="container">
         <div class="terms-content">
-            <h1 style="text-align: center; color: var(--utec-primary); margin-bottom: 40px;">
-                Términos y Condiciones
-            </h1>
+            <div style="text-align: center; margin-bottom: 40px;">
+                <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" style="height: 80px; margin-bottom: 20px; background-color: white; border-radius: 50%; padding: 10px;">
+                <h1 style="color: var(--utec-primary); margin: 0;">
+                    Términos y Condiciones
+                </h1>
+            </div>
             
             <h2>1. Aceptación de los Términos</h2>
             <p>
@@ -94,10 +100,13 @@
                 </p>
             </div>
             
-            <div style="text-align: center; margin-top: 30px;">
+            <div style="text-align: center; margin-top: 30px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <a href="/" class="btn btn-secondary">Volver al Inicio</a>
+                <a href="/login" class="btn btn-primary" style="border: 2px solid #ccc;">Iniciar Sesión</a>
             </div>
         </div>
     </div>
+    
+    <%- include('partials/footer', { marginTop: '50px', showTerms: false }) %>
 </body>
 </html>

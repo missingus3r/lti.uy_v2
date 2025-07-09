@@ -5,7 +5,7 @@ async function scrapeAcademicProgress(username, password) {
     
     try {
         browser = await chromium.launch({
-            headless: false,
+            headless: true,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         
@@ -116,13 +116,17 @@ async function scrapeAcademicProgress(username, password) {
         // Look for the specific link with title "Mis expedientes académicos"
         let expedientesLink = null;
         
-        // Try different selectors for "Mis expedientes académicos"
+        // Try different selectors for "Mis expedientes académicos" and "Progreso académico"
         const expedientesSelectors = [
             'a[title="Mis expedientes académicos"]',
             'a#pt1\\:men-portlets\\:j_idt35',
             'text=Progreso académico',
+            'text=Progreso Académico',
             'a:has-text("Progreso académico")',
+            'a:has-text("Progreso Académico")',
             '[title*="expedientes académicos"]',
+            '[title*="Progreso académico"]',
+            '[title*="Progreso Académico"]',
             'a.AC_EXP_ALU'
         ];
         
@@ -141,14 +145,66 @@ async function scrapeAcademicProgress(username, password) {
             }
         }
         
+        // If no selector worked, try finding by text content using evaluate
         if (!expedientesLink) {
-            throw new Error('No se encontró el enlace "Mis expedientes académicos"');
+            expedientesLink = await page.evaluate(() => {
+                const allLinks = Array.from(document.querySelectorAll('a'));
+                return allLinks.find(link => {
+                    const text = link.textContent.trim().toLowerCase();
+                    const title = (link.title || '').toLowerCase();
+                    const href = (link.href || '').toLowerCase();
+                    
+                    return text.includes('progreso académico') || 
+                           text.includes('progreso academico') ||
+                           text.includes('expedientes académicos') ||
+                           text.includes('expedientes academicos') ||
+                           title.includes('progreso académico') ||
+                           title.includes('progreso academico') ||
+                           title.includes('expedientes académicos') ||
+                           title.includes('expedientes academicos') ||
+                           href.includes('progress') ||
+                           href.includes('expediente');
+                });
+            });
+        }
+        
+        if (!expedientesLink) {
+            throw new Error('No se encontró el enlace "Mis expedientes académicos" o "Progreso académico"');
         }
         
         // Click the link to open academic progress
-        await expedientesLink.click();
+        if (typeof expedientesLink === 'object' && expedientesLink.click) {
+            // Link found by selector
+            await expedientesLink.click();
+        } else {
+            // Link found by evaluate, click using JavaScript
+            await page.evaluate(() => {
+                const allLinks = Array.from(document.querySelectorAll('a'));
+                const progressLink = allLinks.find(link => {
+                    const text = link.textContent.trim().toLowerCase();
+                    const title = (link.title || '').toLowerCase();
+                    const href = (link.href || '').toLowerCase();
+                    
+                    return text.includes('progreso académico') || 
+                           text.includes('progreso academico') ||
+                           text.includes('expedientes académicos') ||
+                           text.includes('expedientes academicos') ||
+                           title.includes('progreso académico') ||
+                           title.includes('progreso academico') ||
+                           title.includes('expedientes académicos') ||
+                           title.includes('expedientes academicos') ||
+                           href.includes('progress') ||
+                           href.includes('expediente');
+                });
+                if (progressLink) {
+                    progressLink.click();
+                }
+            });
+        }
         
         console.log('Esperando tabla de materias...');
+        // Esperar 5 segundos de forma asíncrona sin bloquear la app
+        await new Promise(resolve => setTimeout(resolve, 5000));
         
         // Wait for the specific academic progress table to load
         await page.waitForSelector('div[role="grid"]', { 
@@ -215,8 +271,6 @@ async function scrapeAcademicProgress(username, password) {
         });
         
         console.log(`Se encontraron ${subjects.length} materias`);
-
-        console.log(subjects);
         
         return {
             success: true,
