@@ -2,36 +2,50 @@ const { chromium } = require('playwright');
 
 async function authenticateWithMoodle(username, password) {
     let browser = null;
+    let context = null;
+    let page = null;
     
     try {
         browser = await chromium.launch({
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--no-zygote',
+                '--single-process'
+            ]
         });
         
-        const context = await browser.newContext({
+        context = await browser.newContext({
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             viewport: { width: 1366, height: 768 },
-            locale: 'es-UY'
+            locale: 'es-UY',
+            ignoreHTTPSErrors: true
         });
         
-        const page = await context.newPage();
+        page = await context.newPage();
         
         // Set extra timeout for slower connections
-        page.setDefaultTimeout(30000);
+        page.setDefaultTimeout(45000);
         
         console.log('Navegando a UTEC Moodle...');
         
         // Navigate to UTEC Moodle login page
         await page.goto('https://ev1.utec.edu.uy/moodle/login/index.php', {
-            waitUntil: 'domcontentloaded',
-            timeout: 30000
+            waitUntil: 'networkidle',
+            timeout: 45000
         });
         
-        // Wait for the login form to be visible
-        await page.waitForSelector('#username', { visible: true });
-        await page.waitForSelector('#password', { visible: true });
-        await page.waitForSelector('#loginbtn', { visible: true });
+        // Wait for the login form to be visible with state check
+        if (!page || page.isClosed()) {
+            throw new Error('Page was closed unexpectedly');
+        }
+        
+        await page.waitForSelector('#username', { visible: true, timeout: 20000 });
+        await page.waitForSelector('#password', { visible: true, timeout: 20000 });
+        await page.waitForSelector('#loginbtn', { visible: true, timeout: 20000 });
         
         console.log('Formulario de login encontrado, ingresando credenciales...');
         
@@ -47,8 +61,10 @@ async function authenticateWithMoodle(username, password) {
         // await page.screenshot({ path: 'login-form.png' });
         
         // Click the login button and wait for navigation
-        await page.click('#loginbtn');
-        await page.waitForLoadState('domcontentloaded', { timeout: 20000 });
+        await Promise.all([
+            page.waitForNavigation({ waitUntil: 'networkidle', timeout: 30000 }),
+            page.click('#loginbtn')
+        ]);
         
         console.log('Login enviado, verificando resultado...');
         
@@ -135,8 +151,28 @@ async function authenticateWithMoodle(username, password) {
             message: 'Error de conexión con el servidor de UTEC'
         };
     } finally {
-        if (browser) {
-            await browser.close();
+        try {
+            if (page && !page.isClosed()) {
+                await page.close();
+            }
+        } catch (e) {
+            console.error('Error closing page:', e.message);
+        }
+        
+        try {
+            if (context) {
+                await context.close();
+            }
+        } catch (e) {
+            console.error('Error closing context:', e.message);
+        }
+        
+        try {
+            if (browser && browser.isConnected()) {
+                await browser.close();
+            }
+        } catch (e) {
+            console.error('Error closing browser:', e.message);
         }
     }
 }

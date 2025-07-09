@@ -2,38 +2,53 @@ const { chromium } = require('playwright');
 
 async function scrapeAcademicProgress(username, password) {
     let browser = null;
+    let context = null;
+    let page = null;
     
     try {
         browser = await chromium.launch({
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--no-zygote',
+                '--single-process'
+            ]
         });
         
-        const context = await browser.newContext({
+        context = await browser.newContext({
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             viewport: { width: 1366, height: 768 },
-            locale: 'es-UY'
+            locale: 'es-UY',
+            ignoreHTTPSErrors: true
         });
         
-        const page = await context.newPage();
-        page.setDefaultTimeout(30000);
+        page = await context.newPage();
+        page.setDefaultTimeout(45000);
         
         console.log('Navegando a Portal UTEC para autenticación...');
         
         // Navigate to Portal UTEC (will redirect to authentication)
         await page.goto('https://portal.utec.edu.uy/', {
-            waitUntil: 'domcontentloaded',
-            timeout: 30000
+            waitUntil: 'networkidle',
+            timeout: 45000
         });
         
         // Wait for redirect to authentication domain
-        await page.waitForURL('**/autenticacion.utec.edu.uy/**', { timeout: 15000 });
+        await page.waitForURL('**/autenticacion.utec.edu.uy/**', { timeout: 20000 });
         
         console.log('Redirigido a dominio de autenticación, ingresando credenciales...');
         
+        // Check if page is still valid
+        if (!page || page.isClosed()) {
+            throw new Error('Page was closed unexpectedly');
+        }
+        
         // Wait for authentication form on autenticacion.utec.edu.uy
-        await page.waitForSelector('input[name="username"], input[type="text"]', { visible: true });
-        await page.waitForSelector('input[name="password"], input[type="password"]', { visible: true });
+        await page.waitForSelector('input[name="username"], input[type="text"]', { visible: true, timeout: 20000 });
+        await page.waitForSelector('input[name="password"], input[type="password"]', { visible: true, timeout: 20000 });
         
         // Find form fields
         const usernameField = await page.$('input[name="username"]') || await page.$('input[type="text"]');
@@ -50,7 +65,7 @@ async function scrapeAcademicProgress(username, password) {
         
         // Submit and wait for redirect to portaluxxi
         await Promise.all([
-            page.waitForURL('**/portaluxxi.utec.edu.uy/**', { timeout: 20000 }),
+            page.waitForURL('**/portaluxxi.utec.edu.uy/**', { timeout: 30000 }),
             submitButton.click()
         ]);
         
@@ -69,7 +84,7 @@ async function scrapeAcademicProgress(username, password) {
         }
         
         // Wait for page to fully load
-        await page.waitForLoadState('networkidle', { timeout: 10000 });
+        await page.waitForLoadState('networkidle', { timeout: 15000 });
         
         console.log('Navegando a Información Académica...');
         
@@ -287,8 +302,28 @@ async function scrapeAcademicProgress(username, password) {
         };
         
     } finally {
-        if (browser) {
-            await browser.close();
+        try {
+            if (page && !page.isClosed()) {
+                await page.close();
+            }
+        } catch (e) {
+            console.error('Error closing page:', e.message);
+        }
+        
+        try {
+            if (context) {
+                await context.close();
+            }
+        } catch (e) {
+            console.error('Error closing context:', e.message);
+        }
+        
+        try {
+            if (browser && browser.isConnected()) {
+                await browser.close();
+            }
+        } catch (e) {
+            console.error('Error closing browser:', e.message);
         }
     }
 }
