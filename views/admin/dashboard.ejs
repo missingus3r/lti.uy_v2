@@ -368,6 +368,7 @@
             <div class="tab-buttons">
                 <button class="tab-btn active" onclick="switchTab('logs')">Logs de Actividad</button>
                 <button class="tab-btn" onclick="switchTab('users')">Usuarios</button>
+                <button class="tab-btn" onclick="switchTab('chats')">Historial de Chats</button>
             </div>
             
             <!-- Logs Tab -->
@@ -417,6 +418,37 @@
                     <div class="loading">Cargando usuarios...</div>
                 </div>
             </div>
+            
+            <!-- Chats Tab -->
+            <div id="chats-tab" class="tab-content">
+                <!-- Chat Filters -->
+                <div class="filters">
+                    <h2>Filtros de Chat</h2>
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="chat-username-filter">Usuario</label>
+                            <input type="text" id="chat-username-filter" placeholder="Buscar por usuario...">
+                        </div>
+                        <div class="filter-group">
+                            <label for="chat-start-date">Fecha Inicio</label>
+                            <input type="date" id="chat-start-date">
+                        </div>
+                        <div class="filter-group">
+                            <label for="chat-end-date">Fecha Fin</label>
+                            <input type="date" id="chat-end-date">
+                        </div>
+                        <button class="btn btn-primary" onclick="applyChatFilters()">Aplicar Filtros</button>
+                    </div>
+                </div>
+                
+                <!-- Chats Table -->
+                <div class="logs-table">
+                    <h2>Historial de Conversaciones</h2>
+                    <div id="chats-container">
+                        <div class="loading">Cargando conversaciones...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -430,7 +462,7 @@
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
             if (tab === 'logs') {
-                document.querySelector('.tab-btn').classList.add('active');
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('logs-tab').classList.add('active');
                 if (!document.querySelector('#logs-table')) {
                     loadLogs();
@@ -439,6 +471,10 @@
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('users-tab').classList.add('active');
                 loadUsers();
+            } else if (tab === 'chats') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('chats-tab').classList.add('active');
+                loadChats();
             }
         }
         
@@ -576,6 +612,165 @@
         // Apply filters
         function applyFilters() {
             loadLogs(1);
+        }
+        
+        // Load chats
+        async function loadChats(page = 1) {
+            try {
+                const filters = {
+                    username: document.getElementById('chat-username-filter').value,
+                    startDate: document.getElementById('chat-start-date').value,
+                    endDate: document.getElementById('chat-end-date').value,
+                    page: page
+                };
+                
+                const queryString = new URLSearchParams(filters).toString();
+                const response = await fetch(`/admin/api/chat-history?${queryString}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderChats(data.chats);
+                    currentPage = data.currentPage;
+                    totalPages = data.totalPages;
+                } else {
+                    document.getElementById('chats-container').innerHTML = '<div class="empty-state">Error al cargar chats</div>';
+                }
+            } catch (error) {
+                console.error('Error loading chats:', error);
+                document.getElementById('chats-container').innerHTML = '<div class="empty-state">Error al cargar chats</div>';
+            }
+        }
+        
+        // Render chats table
+        function renderChats(chats) {
+            if (chats.length === 0) {
+                document.getElementById('chats-container').innerHTML = '<div class="empty-state">No se encontraron conversaciones</div>';
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Fecha</th>
+                            <th>Mensajes</th>
+                            <th>Último Mensaje</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            chats.forEach(chat => {
+                const date = new Date(chat.metadata.lastActivity).toLocaleString('es-UY');
+                const lastMessage = chat.messages && chat.messages.length > 0 
+                    ? chat.messages[chat.messages.length - 1]
+                    : null;
+                
+                const preview = lastMessage 
+                    ? (lastMessage.role === 'user' ? lastMessage.content : 'Asistente: ' + lastMessage.content)
+                    : 'Sin mensajes';
+                
+                const truncatedPreview = preview.length > 100 ? preview.substring(0, 100) + '...' : preview;
+                
+                html += `
+                    <tr>
+                        <td>${chat.userId?.username || 'Usuario eliminado'}</td>
+                        <td>${date}</td>
+                        <td>${chat.metadata.totalMessages}</td>
+                        <td>${truncatedPreview}</td>
+                        <td>
+                            <button onclick="viewChatDetails('${chat.sessionId}')" class="btn btn-primary" style="font-size: 0.8rem; padding: 4px 8px;">
+                                Ver Detalles
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button onclick="loadChats(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
+                    <span class="page-info">Página ${currentPage} de ${totalPages}</span>
+                    <button onclick="loadChats(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente</button>
+                </div>
+            `;
+            
+            document.getElementById('chats-container').innerHTML = html;
+        }
+        
+        // View chat details
+        function viewChatDetails(sessionId) {
+            // Create a modal to show chat details
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+                    <span class="modal-close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    <h2>Detalles de la Conversación</h2>
+                    <div id="chat-details-content">
+                        <div class="loading">Cargando conversación...</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Load chat details
+            fetch(`/assistant/session/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.chatSession) {
+                        displayChatDetails(data.chatSession);
+                    } else {
+                        document.getElementById('chat-details-content').innerHTML = '<p>No se pudo cargar la conversación</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading chat details:', error);
+                    document.getElementById('chat-details-content').innerHTML = '<p>Error al cargar la conversación</p>';
+                });
+        }
+        
+        // Display chat details
+        function displayChatDetails(chatSession) {
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <strong>ID de Sesión:</strong> ${chatSession.sessionId}<br>
+                    <strong>Total de Mensajes:</strong> ${chatSession.metadata.totalMessages}<br>
+                    <strong>Última Actividad:</strong> ${new Date(chatSession.metadata.lastActivity).toLocaleString('es-UY')}
+                </div>
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+            `;
+            
+            chatSession.messages.forEach(msg => {
+                const time = new Date(msg.timestamp).toLocaleString('es-UY');
+                const role = msg.role === 'user' ? 'Usuario' : 'Asistente';
+                const bgColor = msg.role === 'user' ? '#e3f2fd' : '#f5f5f5';
+                
+                html += `
+                    <div style="margin-bottom: 15px; padding: 10px; background-color: ${bgColor}; border-radius: 5px;">
+                        <div style="font-weight: bold; margin-bottom: 5px; color: #666; font-size: 0.9rem;">
+                            ${role} - ${time}
+                        </div>
+                        <div style="line-height: 1.4;">
+                            ${msg.content.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            document.getElementById('chat-details-content').innerHTML = html;
+        }
+        
+        // Apply chat filters
+        function applyChatFilters() {
+            loadChats(1);
         }
         
         // Load logs on page load

@@ -120,7 +120,7 @@
     <nav class="navbar" role="navigation" aria-label="Navegación principal">
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <a href="/" class="navbar-brand" aria-label="Ir a inicio de LTI.UY">
-                <img src="/images/utec-logo.png" alt="UTEC Logo" class="navbar-logo">
+                <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" class="navbar-logo">
                 LTI.UY
             </a>
             
@@ -138,6 +138,7 @@
                 <a href="#requirements" onclick="closeMobileMenu()" role="menuitem">Requerimientos</a>
                 <a href="#services" onclick="closeMobileMenu()" role="menuitem">Servicios</a>
                 <a href="#faq" onclick="closeMobileMenu()" role="menuitem">FAQ</a>
+                <a href="/news" onclick="closeMobileMenu()" role="menuitem">Novedades</a>
                 <a href="/login" class="btn btn-primary nav-login-btn" onclick="closeMobileMenu()" role="menuitem" title="Acceder a tu cuenta de estudiante">Iniciar Sesión</a>
             </div>
         </div>
@@ -147,6 +148,7 @@
         <section class="hero hero-bg">
             <div class="container">
                 <header>
+                    <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" class="hero-logo">
                     <h1>Bienvenido a LTI.UY</h1>
                     <p>Tu plataforma centralizada para acceder a toda la información de la carrera LTI en UTEC</p>
                     <br>
@@ -190,10 +192,7 @@
             </header>
             <div class="sites-grid">
                 <div class="site-card">
-                    <div class="site-header">
-                        <img src="/images/portal-academico.png" alt="Portal Académico" class="site-icon">
-                        <h3>Portal Académico</h3>
-                    </div>
+                    <h3>Portal Académico</h3>
                     <p>Accede a tu información académica oficial</p>
                     <div class="site-links">
                         <a href="https://portal.utec.edu.uy" target="_blank" rel="noopener">Portal Principal</a>
@@ -202,132 +201,148 @@
                     </div>
                 </div>
                 <div class="site-card">
-                    <div class="site-header">
-                        <img src="/images/eva.png" alt="EVA/Moodle" class="site-icon">
-                        <h3>Plataformas de Aprendizaje</h3>
-                    </div>
+                    <h3>Plataformas de Aprendizaje</h3>
                     <p>Recursos educativos y entornos virtuales</p>
                     <div class="site-links">
-                        <a href="https://ev1.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/eva.png" alt="EVA" class="link-icon">
-                            EVA/Moodle
-                        </a>
-                        <a href="https://edu.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/edu.png" alt="EDU" class="link-icon">
-                            EDU
-                        </a>
-                        <a href="https://airtable.com/shrm963356m0de6lj/tblUnEnOv4jH2Ovgk" target="_blank" rel="noopener">
-                            <img src="/images/edu-air-table.png" alt="AirTable" class="link-icon">
-                            Inscripción APEs
-                        </a>
-                        <a href="https://taa.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/taa.png" alt="TAA" class="link-icon">
-                            TAA
-                        </a>
-                        <a href="https://scaleup.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/scaleup.png" alt="Scale Up" class="link-icon">
-                            Aulas Scale Up
-                        </a>
+                        <a href="https://ev1.utec.edu.uy" target="_blank" rel="noopener">EVA/Moodle</a>
+                        <a href="https://edu.utec.edu.uy" target="_blank" rel="noopener">EDU</a>
+                        <a href="https://airtable.com/shrm963356m0de6lj/tblUnEnOv4jH2Ovgk" target="_blank" rel="noopener">Inscripción APEs</a>
+                        <a href="https://taa.utec.edu.uy" target="_blank" rel="noopener">TAA</a>
+                        <a href="https://scaleup.utec.edu.uy" target="_blank" rel="noopener">Aulas Scale Up</a>
                     </div>
                 </div>
                 <div class="site-card">
-                    <div class="site-header">
-                        <img src="/images/pwm.png" alt="PWM" class="site-icon">
-                        <h3>Herramientas Académicas</h3>
-                    </div>
+                    <h3>Herramientas Académicas</h3>
                     <p>Gestión de cuenta y recursos digitales</p>
                     <div class="site-links">
-                        <a href="https://pwm.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/pwm.png" alt="PWM" class="link-icon">
-                            Gestión de Cuenta
-                        </a>
-                        <a href="https://red.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/red.png" alt="Red" class="link-icon">
-                            Recursos Digitales
-                        </a>
+                        <a href="https://pwm.utec.edu.uy" target="_blank" rel="noopener">Gestión de Cuenta</a>
+                        <a href="https://red.utec.edu.uy" target="_blank" rel="noopener">Recursos Digitales</a>
                     </div>
                 </div>
                 <div class="site-card">
-                    <div class="site-header">
-                        <img src="/images/mda.png" alt="Mesa de Ayuda" class="site-icon">
-                        <h3>Soporte y Servicios</h3>
-                    </div>
+                    <h3>Soporte y Servicios</h3>
                     <p>Ayuda técnica y servicios estudiantiles</p>
                     <div class="site-links">
                         <a href="https://mds.utec.edu.uy" target="_blank" rel="noopener">Mesa de Servicio</a>
-                        <a href="https://mda.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/mda.png" alt="MDA" class="link-icon">
-                            Mesa de Ayuda
-                        </a>
-                        <a href="https://erp.utec.edu.uy/jobs" target="_blank" rel="noopener">
-                            <img src="/images/erp.png" alt="ERP" class="link-icon">
-                            Ofertas Laborales
-                        </a>
+                        <a href="https://mda.utec.edu.uy" target="_blank" rel="noopener">Mesa de Ayuda</a>
+                        <a href="https://erp.utec.edu.uy/jobs" target="_blank" rel="noopener">Ofertas Laborales</a>
                         <a href="https://utec.netlanguages.com/utec/login.php" target="_blank" rel="noopener">Net Languages</a>
                     </div>
                 </div>
                 <div class="site-card">
-                    <div class="site-header">
-                        <img src="/images/git.png" alt="Git UTEC" class="site-icon">
-                        <h3>Desarrollo y Tecnología</h3>
-                    </div>
+                    <h3>Desarrollo y Tecnología</h3>
                     <p>Plataformas de desarrollo y testing</p>
                     <div class="site-links">
-                        <a href="https://git.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/git.png" alt="Git" class="link-icon">
-                            Git UTEC
-                        </a>
-                        <a href="https://aichallenge.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/ai-challenge.png" alt="AI Challenge" class="link-icon">
-                            AI Challenge
-                        </a>
-                        <a href="https://mantis.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/mantis.png" alt="Mantis" class="link-icon">
-                            Mantis Bug Tracker
-                        </a>
-                        <a href="https://testlink.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/testlink.png" alt="TestLink" class="link-icon">
-                            Testlink
-                        </a>
+                        <a href="https://git.utec.edu.uy" target="_blank" rel="noopener">Git UTEC</a>
+                        <a href="https://aichallenge.utec.edu.uy" target="_blank" rel="noopener">AI Challenge</a>
+                        <a href="https://mantis.utec.edu.uy" target="_blank" rel="noopener">Mantis Bug Tracker</a>
+                        <a href="https://testlink.utec.edu.uy" target="_blank" rel="noopener">Testlink</a>
                     </div>
                 </div>
                 <div class="site-card">
-                    <div class="site-header">
-                        <img src="/images/utec.png" alt="UTEC" class="site-icon">
-                        <h3>Sitio Oficial</h3>
-                    </div>
+                    <h3>Sitio Oficial</h3>
                     <p>Información general e inscripciones</p>
                     <div class="site-links">
-                        <a href="https://utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/utec.png" alt="UTEC" class="link-icon">
-                            Página Principal
-                        </a>
-                        <a href="https://descubri.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/descubri.png" alt="Descubrí UTEC" class="link-icon">
-                            Descubrí UTEC
-                        </a>
+                        <a href="https://utec.edu.uy" target="_blank" rel="noopener">Página Principal</a>
+                        <a href="https://descubri.utec.edu.uy" target="_blank" rel="noopener">Descubrí UTEC</a>
                     </div>
                 </div>
                 <div class="site-card">
-                    <div class="site-header">
-                        <img src="/images/moodle_historico.png" alt="Histórico Moodle" class="site-icon">
-                        <h3>Proyectos y Recursos Adicionales</h3>
-                    </div>
+                    <h3>Proyectos y Recursos Adicionales</h3>
                     <p>Proyectos especiales y recursos históricos</p>
                     <div class="site-links">
-                        <a href="https://historico-moodle.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/moodle_historico.png" alt="Histórico Moodle" class="link-icon">
-                            Histórico Moodle
-                        </a>
-                        <a href="https://duraznosmart.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/durazno_smart.png" alt="Durazno Smart" class="link-icon">
-                            Durazno Smart Village
-                        </a>
-                        <a href="https://desafioprofundo.utec.edu.uy" target="_blank" rel="noopener">
-                            <img src="/images/desafioprofundo.png" alt="Desafío Profundo" class="link-icon">
-                            Desafío Profundo
-                        </a>
+                        <a href="https://historico-moodle.utec.edu.uy" target="_blank" rel="noopener">Histórico Moodle</a>
+                        <a href="https://duraznosmart.utec.edu.uy" target="_blank" rel="noopener">Durazno Smart Village</a>
+                        <a href="https://desafioprofundo.utec.edu.uy" target="_blank" rel="noopener">Desafío Profundo</a>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Carousel de imágenes de sitios UTEC -->
+            <div class="utec-carousel">
+                <div class="carousel-container">
+                    <div class="carousel-track" id="carouselTrack">
+                        <div class="carousel-item">
+                            <img src="/images/portal-academico.png" alt="Portal Académico" class="carousel-image">
+                            <p class="carousel-caption">Portal Académico</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/eva.png" alt="EVA/Moodle" class="carousel-image">
+                            <p class="carousel-caption">EVA/Moodle</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/edu.png" alt="EDU" class="carousel-image">
+                            <p class="carousel-caption">EDU</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/edu-air-table.png" alt="AirTable" class="carousel-image">
+                            <p class="carousel-caption">Inscripción APEs</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/taa.png" alt="TAA" class="carousel-image">
+                            <p class="carousel-caption">TAA</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/scaleup.png" alt="Scale Up" class="carousel-image">
+                            <p class="carousel-caption">Aulas Scale Up</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/pwm.png" alt="PWM" class="carousel-image">
+                            <p class="carousel-caption">Gestión de Cuenta</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/red.png" alt="Red" class="carousel-image">
+                            <p class="carousel-caption">Recursos Digitales</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/mda.png" alt="Mesa de Ayuda" class="carousel-image">
+                            <p class="carousel-caption">Mesa de Ayuda</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/erp.png" alt="ERP" class="carousel-image">
+                            <p class="carousel-caption">Ofertas Laborales</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/git.png" alt="Git UTEC" class="carousel-image">
+                            <p class="carousel-caption">Git UTEC</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/ai-challenge.png" alt="AI Challenge" class="carousel-image">
+                            <p class="carousel-caption">AI Challenge</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/mantis.png" alt="Mantis" class="carousel-image">
+                            <p class="carousel-caption">Mantis Bug Tracker</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/testlink.png" alt="TestLink" class="carousel-image">
+                            <p class="carousel-caption">Testlink</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/utec.png" alt="UTEC" class="carousel-image">
+                            <p class="carousel-caption">UTEC</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/descubri.png" alt="Descubrí UTEC" class="carousel-image">
+                            <p class="carousel-caption">Descubrí UTEC</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/moodle_historico.png" alt="Histórico Moodle" class="carousel-image">
+                            <p class="carousel-caption">Histórico Moodle</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/durazno_smart.png" alt="Durazno Smart" class="carousel-image">
+                            <p class="carousel-caption">Durazno Smart</p>
+                        </div>
+                        <div class="carousel-item">
+                            <img src="/images/desafioprofundo.png" alt="Desafío Profundo" class="carousel-image">
+                            <p class="carousel-caption">Desafío Profundo</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-controls">
+                    <button class="carousel-btn prev" id="prevBtn" aria-label="Anterior">‹</button>
+                    <button class="carousel-btn next" id="nextBtn" aria-label="Siguiente">›</button>
                 </div>
             </div>
         </div>
@@ -579,10 +594,22 @@
         }
         
         .navbar-logo {
-            height: 24px;
+            height: 52px;
             width: auto;
             margin-right: 10px;
             vertical-align: middle;
+            background-color: white;
+            border-radius: 50%;
+            padding: 6px;
+        }
+        
+        .hero-logo {
+            height: 95px;
+            width: auto;
+            margin-bottom: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         /* Mobile Responsive */
@@ -759,8 +786,114 @@
             background-color: rgba(0, 0, 0, 0.05);
         }
         
+        /* Carousel Styles */
+        .utec-carousel {
+            margin: 50px auto;
+            max-width: 1200px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            padding: 30px 0;
+            margin: 0 auto;
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            width: calc(100% * 19 / 4); /* Total items / items per view */
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .carousel-item {
+            flex: 0 0 calc(100% / 4); /* 4 items per view on desktop */
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-image {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 15px;
+            background-color: white;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 0 auto 15px;
+            display: block;
+        }
+        
+        .carousel-image:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .carousel-caption {
+            font-size: 1rem;
+            color: var(--utec-dark);
+            font-weight: 600;
+            margin-top: 15px;
+            line-height: 1.3;
+            text-align: center;
+        }
+        
+        .carousel-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .carousel-btn {
+            background: linear-gradient(135deg, var(--utec-primary), var(--utec-secondary));
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 173, 224, 0.3);
+        }
+        
+        .carousel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 173, 224, 0.4);
+        }
+        
+        .carousel-btn:active {
+            transform: translateY(0);
+        }
+        
+        .carousel-btn.prev {
+            background: linear-gradient(135deg, var(--utec-secondary), var(--utec-primary));
+        }
+        
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            .hero-logo {
+                height: 63px;
+                margin-bottom: 15px;
+            }
+            
             .hero-bg,
             .utec-sites-bg {
                 background-attachment: scroll;
@@ -779,6 +912,43 @@
             .link-icon {
                 width: 14px;
                 height: 14px;
+            }
+            
+            /* Carousel responsive styles */
+            .utec-carousel {
+                margin: 30px auto;
+                padding: 25px;
+                max-width: 95%;
+            }
+            
+            .carousel-container {
+                padding: 20px 0;
+            }
+            
+            .carousel-track {
+                width: calc(100% * 19 / 2); /* 2 items per view on mobile */
+            }
+            
+            .carousel-item {
+                flex: 0 0 calc(100% / 2); /* 2 items per view on mobile */
+                padding: 15px;
+            }
+            
+            .carousel-image {
+                width: 100px;
+                height: 100px;
+                padding: 12px;
+            }
+            
+            .carousel-caption {
+                font-size: 0.9rem;
+                margin-top: 12px;
+            }
+            
+            .carousel-btn {
+                width: 45px;
+                height: 45px;
+                font-size: 22px;
             }
         }
     </style>
@@ -848,6 +1018,54 @@
                     });
                 }
             });
+        });
+        
+        // Carousel functionality
+        let currentSlide = 0;
+        const carouselTrack = document.getElementById('carouselTrack');
+        const carouselItems = document.querySelectorAll('.carousel-item');
+        const totalSlides = carouselItems.length;
+        const itemsPerView = window.innerWidth <= 768 ? 2 : 4; // Responsive items per view
+        const maxSlide = Math.max(0, totalSlides - itemsPerView);
+        
+        function updateCarousel() {
+            const translateX = -(currentSlide * (100 / itemsPerView));
+            carouselTrack.style.transform = `translateX(${translateX}%)`;
+        }
+        
+        function nextSlide() {
+            currentSlide = currentSlide >= maxSlide ? 0 : currentSlide + 1;
+            updateCarousel();
+        }
+        
+        function prevSlide() {
+            currentSlide = currentSlide <= 0 ? maxSlide : currentSlide - 1;
+            updateCarousel();
+        }
+        
+        // Event listeners for carousel controls
+        document.getElementById('nextBtn').addEventListener('click', nextSlide);
+        document.getElementById('prevBtn').addEventListener('click', prevSlide);
+        
+        // Auto-advance carousel
+        let carouselInterval = setInterval(nextSlide, 4000);
+        
+        // Pause auto-advance on hover
+        const carouselContainer = document.querySelector('.carousel-container');
+        carouselContainer.addEventListener('mouseenter', () => {
+            clearInterval(carouselInterval);
+        });
+        
+        carouselContainer.addEventListener('mouseleave', () => {
+            carouselInterval = setInterval(nextSlide, 4000);
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const newItemsPerView = window.innerWidth <= 768 ? 2 : 4;
+            if (newItemsPerView !== itemsPerView) {
+                location.reload(); // Simple solution for responsive changes
+            }
         });
     </script>
 </body>

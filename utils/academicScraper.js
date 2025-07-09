@@ -111,16 +111,42 @@ async function scrapeAcademicProgress(username, password) {
         // Wait for submenu to appear
         await page.waitForTimeout(2000);
         
-        console.log('Navegando a Progreso Académico con teclado...');
+        console.log('Buscando enlace "Mis expedientes académicos"...');
         
-        // Use keyboard navigation: press Tab twice to navigate to "Progreso Académico"
-        await page.keyboard.press('Tab');
-        await page.waitForTimeout(500); // Small delay between tabs
-        await page.keyboard.press('Tab');
-        await page.waitForTimeout(500);
+        // Look for the specific link with title "Mis expedientes académicos"
+        let expedientesLink = null;
         
-        // Press Enter to open the table
-        await page.keyboard.press('Enter');
+        // Try different selectors for "Mis expedientes académicos"
+        const expedientesSelectors = [
+            'a[title="Mis expedientes académicos"]',
+            'a#pt1\\:men-portlets\\:j_idt35',
+            'text=Progreso académico',
+            'a:has-text("Progreso académico")',
+            '[title*="expedientes académicos"]',
+            'a.AC_EXP_ALU'
+        ];
+        
+        for (const selector of expedientesSelectors) {
+            try {
+                expedientesLink = await page.waitForSelector(selector, { 
+                    visible: true,
+                    timeout: 5000 
+                });
+                if (expedientesLink) {
+                    console.log(`Encontrado enlace con selector: ${selector}`);
+                    break;
+                }
+            } catch (e) {
+                continue;
+            }
+        }
+        
+        if (!expedientesLink) {
+            throw new Error('No se encontró el enlace "Mis expedientes académicos"');
+        }
+        
+        // Click the link to open academic progress
+        await expedientesLink.click();
         
         console.log('Esperando tabla de materias...');
         

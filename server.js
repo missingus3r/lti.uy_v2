@@ -30,6 +30,7 @@ app.use(session({
 
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const assistantRoutes = require('./routes/assistant');
 const { logPageVisit } = require('./utils/logger');
 
 // Apply logging middleware to all routes
@@ -37,6 +38,7 @@ app.use(logPageVisit);
 
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
+app.use(assistantRoutes);
 
 app.get('/', (req, res) => {
   res.render('index');
@@ -64,6 +66,10 @@ app.get('/welcome', (req, res) => {
 
 app.get('/terms', (req, res) => {
   res.render('terms');
+});
+
+app.get('/news', (req, res) => {
+  res.render('news');
 });
 
 app.get('/logout', (req, res) => {

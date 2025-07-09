@@ -4,6 +4,7 @@ const { isAdmin } = require('../middleware/adminAuth');
 const Log = require('../models/Log');
 const User = require('../models/User');
 const AcademicProgress = require('../models/AcademicProgress');
+const assistantController = require('../controllers/assistantController');
 
 // Admin dashboard
 router.get('/dashboard', isAdmin, async (req, res) => {
@@ -99,5 +100,8 @@ router.get('/api/users', isAdmin, async (req, res) => {
         });
     }
 });
+
+// Get chat history for admin
+router.get('/api/chat-history', isAdmin, assistantController.getAllChatHistory);
 
 module.exports = router;

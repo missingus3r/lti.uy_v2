@@ -15,6 +15,62 @@
     </div>
 </footer>
 
+<!-- AI Assistant Widget -->
+<% if (typeof session !== 'undefined' && session.authenticated) { %>
+<div id="assistant-overlay"></div>
+
+<div id="assistant-widget">
+    <button id="assistant-toggle" title="Asistente de IA">🤖</button>
+    <div id="assistant-popup">
+        <div id="assistant-header">
+            <h3>
+                🤖 Asistente LTI.UY
+            </h3>
+            <div id="assistant-header-buttons">
+                <button id="assistant-history-btn" title="Historial de chat">📜</button>
+                <button id="assistant-new-chat" title="Nueva conversación">➕</button>
+                <button id="assistant-close" title="Cerrar">×</button>
+            </div>
+        </div>
+        <div id="assistant-messages">
+            <div class="assistant-empty-state">
+                <div class="assistant-empty-icon">💬</div>
+                <h4>¡Hola! Soy tu asistente de LTI.UY</h4>
+                <p>Pregúntame sobre tu progreso académico, materias, créditos, planes de carrera o cualquier duda sobre UTEC.</p>
+            </div>
+        </div>
+        <form id="assistant-form">
+            <input type="text" id="assistant-input" placeholder="Escribe tu pregunta aquí..." autocomplete="off" />
+            <button type="submit" id="assistant-send">Enviar</button>
+        </form>
+
+        <!-- AI Disclaimer -->
+        <div id="assistant-disclaimer">
+            <span>⚠️ Los datos generados por la IA pueden tener errores, siempre corroborarlos.</span>
+        </div>
+
+        <!-- History Panel -->
+        <div id="assistant-history-panel">
+            <div id="assistant-history-header">
+                <h3>
+                    📜 Historial de Chat
+                </h3>
+                <div>
+                    <button id="assistant-clear-history" title="Limpiar historial">🗑️</button>
+                    <button id="assistant-history-close" title="Cerrar historial">×</button>
+                </div>
+            </div>
+            <div id="assistant-history-list">
+                <div class="history-empty">
+                    <div class="history-empty-icon">💬</div>
+                    <p>No hay conversaciones anteriores</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<% } %>
+
 <script>
     // Set dynamic copyright year for all footer instances
     document.addEventListener('DOMContentLoaded', function() {

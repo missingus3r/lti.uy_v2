@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novedades - LTI.UY</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .news-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .news-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+            background-color: var(--white);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .news-header h1 {
+            color: var(--utec-primary);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .news-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+        }
+        
+        .news-item {
+            background-color: var(--white);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--utec-primary);
+        }
+        
+        .news-item h3 {
+            color: var(--utec-dark);
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+        
+        .news-date {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        
+        .news-content {
+            color: var(--text-dark);
+            line-height: 1.7;
+        }
+        
+        .news-content ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .news-content li {
+            margin-bottom: 8px;
+        }
+        
+        .news-content .fix {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
+        .news-content .new {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .news-content a {
+            color: var(--utec-primary);
+            text-decoration: none;
+        }
+        
+        .news-content a:hover {
+            text-decoration: underline;
+        }
+        
+        .news-icon {
+            float: right;
+            color: var(--utec-primary);
+            font-size: 2rem;
+            margin-left: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background-color: var(--utec-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .back-button:hover {
+            background-color: var(--utec-dark);
+        }
+        
+        @media (max-width: 768px) {
+            .news-container {
+                padding: 10px;
+            }
+            
+            .news-header h1 {
+                font-size: 2rem;
+            }
+            
+            .news-item {
+                padding: 20px;
+            }
+            
+            .news-icon {
+                float: none;
+                display: block;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="/" class="navbar-brand">
+                <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" class="navbar-logo">
+                LTI.UY
+            </a>
+            <a href="javascript:history.back()" class="btn btn-secondary">Volver</a>
+        </div>
+    </nav>
+
+    <div class="news-container">
+        <div class="news-header">
+            <h1>📢 Novedades</h1>
+            <p>Mantente al día con las últimas actualizaciones de la plataforma</p>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>¡Bienvenidos a LTI.UY v2.0 - Nueva Era!</h3>
+            <div class="news-date">09/07/2025</div>
+            <div class="news-content">
+                <p>¡Estamos emocionados de presentar la versión 2.0 de LTI.UY! Esta nueva versión representa una completa renovación de la plataforma con nuevas funcionalidades y mejoras significativas.</p>
+                
+                <p><strong>Principales novedades:</strong></p>
+                <ul>
+                    <li><span class="new">NEW!</span> - Interfaz completamente rediseñada con un look más moderno y profesional</li>
+                    <li><span class="new">NEW!</span> - Sistema de autenticación mejorado con integración al Portal Académico UTEC</li>
+                    <li><span class="new">NEW!</span> - Seguimiento de progreso académico en tiempo real con visualización de barras de progreso</li>
+                    <li><span class="new">NEW!</span> - Cálculo automático de créditos obtenidos y restantes para completar la carrera</li>
+                    <li><span class="new">NEW!</span> - Comparación inteligente entre asignaturas cursadas y plan de estudios</li>
+                    <li><span class="new">NEW!</span> - Soporte para múltiples planes de estudio (2018, 2024, etc.)</li>
+                    <li><span class="new">NEW!</span> - Actualización manual de datos académicos con verificación por contraseña</li>
+                    <li><span class="new">NEW!</span> - Arquitectura renovada con Express.js y MongoDB para mejor rendimiento</li>
+                    <li><span class="new">NEW!</span> - Sistema de sesiones seguras y manejo de datos académicos privados</li>
+                    <li><span class="new">NEW!</span> - Responsive design optimizado para dispositivos móviles</li>
+                </ul>
+                
+                <p>Esta nueva versión está construida desde cero con tecnologías modernas y un enfoque en la experiencia del usuario. Esperamos que disfruten de todas las mejoras y nuevas funcionalidades.</p>
+                
+                <p>¡Gracias por seguir siendo parte de la comunidad LTI.UY!</p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>Lo prometido es deuda - LTIBOT V1.0 (update 30/05)</h3>
+            <div class="news-date">30/05/24</div>
+            <div class="news-content">
+                <p>Lanzamos la primera version del LTIBOT, basado en <a href="https://openai.com/index/introducing-gpts/" target="_blank">GPTs</a>. Para usarlo se necesita una cuenta de ChatGPT ( totalmente gratis!).</p>
+                <p>Podes entrar por <a href="/ltibot/">acá</a> o por acá: <a href="https://chatgpt.com/g/g-cjqRDBK3k-ltibot" target="_blank">Chatgpt.com/LTIBOT</a></p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>Mega update!</h3>
+            <div class="news-date">19/04/24</div>
+            <div class="news-content">
+                <p>Correcciones y nuevas funcionalidades:</p>
+                <ul>
+                    <li><span class="fix">FIX</span> - Corregido un error de la API al leer los datos del Portal Academico</li>
+                    <li><span class="fix">FIX</span> - Ajuste realizado para no solicitar nuevamente la aceptacion de los ToS pasados los 14 dias de la actualizacion de los datos</li>
+                    <li><span class="fix">FIX</span> - Corregimos el endpoint de Eventos</li>
+                    <li><span class="fix">FIX</span> - Corregimos el boton Volver en las novedades para regresar a la pagina anterior</li>
+                    <li><span class="new">NEW!</span> - Ahora mostramos las Novedades dentro del Area de Estudiantes</li>
+                    <li><span class="new">NEW!</span> - Agregamos los proyectos, inglés y VME a los semestres correspondientes</li>
+                    <li><span class="new">NEW!</span> - En el area de estudiantes podes darle click a "Plan 2018" para verlo</li>
+                </ul>
+                <p>😉</p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>2024! Area de estudiantes, cambio de plan y mas!</h3>
+            <div class="news-date">17/03/24</div>
+            <div class="news-content">
+                <p>Un año pasó desde que armamos este proyecto, el cual empezó como una pequeña ayuda para los estudiantes y terminó siendo nuestro proyecto de final de carrera.</p>
+                <p>Agregamos nuevas funcionalidades en una "Área de estudiantes", como control de créditos, materias cursadas, nota promedio, un chatbot y mucho más.</p>
+                <p>También agregamos los hoteles principales de Durazno y Fray Bentos, un descargo de responsabilidad, la plataforma Net languages y un link de donación para el mantenimiento del sitio.</p>
+                <p>Por el <a href="https://utec.edu.uy/uploads/plan/11f6e5d08a1aafde57de34c907b6fd8ba6ee0a54.pdf" target="_blank">cambio de plan</a> estamos ajustando estas funcionalidades (al igual que el material de estudio) para que reflejen las nuevas materias y su orden correspondiente.</p>
+                <p>Vamos a ir liberando los accesos en el transcurso de estos meses. Por el momento habilitamos el Área de estudiantes con el resumen de las materias cursadas, las pendientes y el promedio para estudiantes del plan de estudio 2018.</p>
+                <p>¡Los mantenemos informados!</p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>Update!</h3>
+            <div class="news-date">10/03/23</div>
+            <div class="news-content">
+                <p>Seguimos trabajando en completar el material.</p>
+                <p>Estamos finalizando con el semestre 2 y 3.</p>
+                <p>Continuamos avanzando con el Asistente Virtual.</p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>Primer semestre completo!</h3>
+            <div class="news-date">08/03/23</div>
+            <div class="news-content">
+                <p>Finalizamos con la subida del material del semestre 1!</p>
+                <p>Tener en cuenta que el material puede no corresponderse de forma exacta con el material publicado actualmente en el EVA.</p>
+                <p>Siempre revisá primero el EVA, este material debe ser tomado como apoyo. Con el tiempo iremos actualizando el contenido para que esté lo mas al día posible con lo publicado en la UTEC.</p>
+                <p>También agregamos una nueva sección con teléfonos de taxis de las sedes de Fray Bentos y Durazno que creemos que les será de gran utilidad para desplazarse desde las terminales hasta los ITR.</p>
+                <p>Proximamente también agregaremos hoteles y casas (con links y precios) donde se podrán alojar si tienen clase más de un día.</p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>Update!</h3>
+            <div class="news-date">07/03/23</div>
+            <div class="news-content">
+                <p>Continuando con los comentarios que hemos recibido:</p>
+                <p>Descongestionamos un poco la lista de paginas relevantes.</p>
+                <p>Trabajando en:</p>
+                <ul>
+                    <li>Completar el material</li>
+                </ul>
+                <p>Pueden continuar enviándonos comentarios por correo, reddit o linkedin!</p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>Próximos pasos</h3>
+            <div class="news-date">07/03/23</div>
+            <div class="news-content">
+                <p>Gracias a todos por el gran interés y feedback que nos han brindado!</p>
+                <p>En los próximos días estaremos organizando y completando los materiales y recursos.</p>
+                <p>Al mismo tiempo estaremos trabajando en implementar nueva funcionalidad al sitio!</p>
+                <p>Stay tuned! ;)</p>
+            </div>
+        </div>
+
+        <div class="news-item">
+            <div class="news-icon">🔔</div>
+            <h3>Hola mundo!</h3>
+            <div class="news-date">04/03/23</div>
+            <div class="news-content">
+                <p>¡Bienvenidos al inicio de LTI.UY! Este es el comienzo de una plataforma que ayudará a los estudiantes de la Licenciatura en Tecnologías de la Información de UTEC.</p>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer', { marginTop: '50px', showTerms: true }) %>
+</body>
+</html>

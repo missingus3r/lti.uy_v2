@@ -165,7 +165,10 @@
             }
             
             .navbar-logo {
-                height: 20px;
+                height: 48px;
+                background-color: white;
+                border-radius: 50%;
+                padding: 5px;
             }
             
             .btn-danger {
@@ -265,7 +268,7 @@
     <nav class="navbar">
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <a href="/" class="navbar-brand">
-                <img src="/images/utec-logo.png" alt="UTEC Logo" class="navbar-logo">
+                <img src="/images/icon_lti_v2.png" alt="LTI.UY Logo" class="navbar-logo">
                 LTI.UY
             </a>
             <a href="/logout" class="btn btn-danger">Cerrar Sesión</a>
@@ -303,11 +306,8 @@
                     </div>
                     
                     <div class="progress-bar-container">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="progressBar" style="width: 0%;"></div>
-                        </div>
-                        <div style="text-align: center; margin-top: 10px;">
-                            <span id="progressText" style="font-size: 1.2rem; font-weight: bold; color: var(--utec-primary);">0%</span>
+                        <div class="progress-bar" id="progressBar" style="width: 0%;">
+                            <span id="progressText" style="font-size: 1.2rem; font-weight: bold; color: white;">0%</span>
                         </div>
                     </div>
                     
@@ -351,6 +351,28 @@
                             <tbody id="subjectsBody">
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Additional subjects not in career plan -->
+                    <div id="additionalSubjectsContainer" style="display: none; margin-top: 30px;">
+                        <h3 style="color: var(--utec-dark); margin-bottom: 20px;">
+                            Optativas, VME y APEs
+                        </h3>
+                        <div class="table-container">
+                            <table class="subjects-table" id="additionalSubjectsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Asignatura</th>
+                                        <th>Créditos</th>
+                                        <th>Tipo</th>
+                                        <th>Convocatoria</th>
+                                        <th>Calificación</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="additionalSubjectsBody">
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -504,32 +526,95 @@
                 });
         }
         
+        // Function to normalize subject names for comparison
+        function normalizeSubjectName(name) {
+            return name
+                // Remove codes in parentheses (TIN_XXX)
+                .replace(/\s*\([^)]*\)$/g, '')
+                // Normalize specific terms before lowercasing
+                .replace(/devops/gi, 'DevOps')
+                .replace(/\btesting\b/gi, 'Testing')
+                // Convert to lowercase for comparison
+                .toLowerCase()
+                // Normalize Fundamento/Fundamentos
+                .replace(/\bfundamento\b/g, 'fundamentos')
+                // Normalize "del" to "de" for consistency
+                .replace(/\bdel\b/g, 'de')
+                // Normalize project names - remove "y testing" from development projects
+                .replace(/\bproyecto\s+de\s+desarrollo\s+y\s+testing\b/g, 'proyecto de desarrollo')
+                // Normalize "Proyecto Final Tecnicatura" vs "Proyecto final de Tecnicatura"
+                .replace(/\bproyecto\s+final\s+de\s+tecnicatura\b/g, 'proyecto final tecnicatura')
+                .replace(/\bproyecto\s+final\s+tecnicatura\b/g, 'proyecto final tecnicatura')
+                // Normalize spaces around "/" for consistency
+                .replace(/\s*\/\s*/g, ' / ')
+                // Normalize "Taller de ciberseguridad" variations
+                .replace(/\btaller\s+de\s+ciberseguridad\s+vinculado\s+a\s+desarrollo\s+en\s+la\s+nube\b/g, 'taller de ciberseguridad vinculado con la nube')
+                .replace(/\btaller\s+de\s+ciberseguridad\s+vinculado\s+con\s+la\s+nube\b/g, 'taller de ciberseguridad vinculado con la nube')
+                // Normalize "Diseño de experiencia de usuario (UX)" to match "Diseño de experiencia"
+                .replace(/\bdiseño\s+de\s+experiencia\s+de\s+usuario\s*\(ux\)\b/g, 'diseño de experiencia')
+                .replace(/\bdiseño\s+de\s+experiencia\s+usuario\b/g, 'diseño de experiencia')
+                // Normalize "Ética, Tecnología y Sociedad" variations
+                .replace(/\bética,?\s+tecnología\s+y\s+sociedad\b/g, 'ética tecnología y sociedad')
+                // Normalize multiple spaces
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+        
+        // Function to extract English level from subject name
+        function extractEnglishLevel(name) {
+            // Roman numerals to Arabic numbers
+            const romanMap = { 'I': 1, 'II': 2, 'III': 3, 'IV': 4, 'V': 5, 'VI': 6 };
+            
+            // Look for roman numerals
+            const romanMatch = name.match(/(?:Semestre\s+)?([IVX]+)/i);
+            if (romanMatch) {
+                return romanMap[romanMatch[1]] || null;
+            }
+            
+            // Look for arabic numbers
+            const arabicMatch = name.match(/(?:Inglés\s+)?(\d+)/i);
+            if (arabicMatch) {
+                return parseInt(arabicMatch[1]);
+            }
+            
+            return null;
+        }
+        
+        // Function to match English subjects with different formats
+        function matchEnglishSubject(portalName, planName) {
+            const portalNorm = normalizeSubjectName(portalName);
+            const planNorm = normalizeSubjectName(planName);
+            
+            // If both contain "inglés"
+            if (portalNorm.includes('inglés') && planNorm.includes('inglés')) {
+                // Extract numbers (roman or arabic)
+                const portalNum = extractEnglishLevel(portalName);
+                const planNum = extractEnglishLevel(planName);
+                
+                if (portalNum && planNum) {
+                    return portalNum === planNum;
+                }
+                
+                // If no numbers found, do basic text comparison
+                return portalNorm === planNorm;
+            }
+            return false;
+        }
+
         function displayProgress(data) {
             // Update progress bar
-            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
             
-            if (data) {
-                progressBar.style.width = data.progressPercentage + '%';
-                progressText.textContent = Math.round(data.progressPercentage) + '%';
-                
-                // Update credits info
-                document.getElementById('totalCredits').textContent = data.totalCredits;
-                document.getElementById('requiredCredits').textContent = data.requiredCredits;
-                document.getElementById('remainingCredits').textContent = data.remainingCredits;
-            } else {
-                progressBar.style.width = '0%';
-                progressText.textContent = '0%';
-                
-                // Update credits info
-                document.getElementById('totalCredits').textContent = '0';
-                document.getElementById('requiredCredits').textContent = currentCareerPlan ? currentCareerPlan.totalCredits : '0';
-                document.getElementById('remainingCredits').textContent = currentCareerPlan ? currentCareerPlan.totalCredits : '0';
-            }
+            // Will calculate progress percentage after getting total credits including additional subjects
+            let progressPercentage = 0;
             
             // Update subjects table
             const tbody = document.getElementById('subjectsBody');
             tbody.innerHTML = '';
+            
+            // Track subjects that match the career plan
+            const matchedSubjects = [];
             
             if (!currentCareerPlan || !currentCareerPlan.subjects || currentCareerPlan.subjects.length === 0) {
                 // Show no data message
@@ -541,8 +626,10 @@
                 cell.style.color = '#666';
                 cell.innerHTML = '<em>No se encontraron datos de asignaturas</em>';
             } else {
-                // Sort subjects by semester
-                const sortedSubjects = currentCareerPlan.subjects.sort((a, b) => a.semester - b.semester);
+                // Sort subjects by semester and exclude optativas
+                const sortedSubjects = currentCareerPlan.subjects
+                    .filter(subject => !subject.name.toLowerCase().includes('optativa'))
+                    .sort((a, b) => a.semester - b.semester);
                 
                 sortedSubjects.forEach(planSubject => {
                     const row = tbody.insertRow();
@@ -550,9 +637,23 @@
                     // Find if this subject is in the student's progress
                     let studentSubject = null;
                     if (data && data.subjects) {
-                        studentSubject = data.subjects.find(s => 
-                            s.name.toLowerCase().trim() === planSubject.name.toLowerCase().trim()
-                        );
+                        studentSubject = data.subjects.find(s => {
+                            const portalName = normalizeSubjectName(s.name);
+                            const planName = normalizeSubjectName(planSubject.name);
+                            
+                            // Exact normalized comparison
+                            if (portalName === planName) return true;
+                            
+                            // Special comparison for English subjects
+                            if (matchEnglishSubject(s.name, planSubject.name)) return true;
+                            
+                            return false;
+                        });
+                    }
+                    
+                    // Track matched subjects
+                    if (studentSubject) {
+                        matchedSubjects.push(studentSubject);
                     }
                     
                     // Set row class based on whether subject is taken
@@ -570,6 +671,95 @@
                     row.insertCell(5).textContent = studentSubject ? (studentSubject.grade || '-') : '-';
                 });
             }
+            
+            // Update additional subjects table (subjects not in career plan)
+            const additionalTBody = document.getElementById('additionalSubjectsBody');
+            const additionalContainer = document.getElementById('additionalSubjectsContainer');
+            additionalTBody.innerHTML = '';
+            
+            if (data && data.subjects) {
+                // Find subjects that are not in the career plan and exclude English subjects
+                const additionalSubjects = data.subjects.filter(studentSubject => {
+                    // Exclude if it matches a subject in the career plan
+                    if (matchedSubjects.some(matched => matched.name === studentSubject.name)) {
+                        return false;
+                    }
+                    
+                    // Exclude English subjects and Vinculación con el Medio
+                    const subjectName = studentSubject.name.toLowerCase();
+                    if (subjectName.includes('inglés') || subjectName.includes('ingles') || subjectName.includes('english')) {
+                        return false;
+                    }
+                    if (subjectName.includes('vinculación con el medio') || subjectName.includes('vinculacion con el medio')) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+                
+                if (additionalSubjects.length > 0) {
+                    additionalContainer.style.display = 'block';
+                    
+                    additionalSubjects.forEach(subject => {
+                        const row = additionalTBody.insertRow();
+                        row.className = 'subject-taken'; // These are all taken subjects
+                        
+                        row.insertCell(0).textContent = subject.name;
+                        row.insertCell(1).textContent = subject.credits;
+                        row.insertCell(2).textContent = subject.type;
+                        row.insertCell(3).textContent = subject.convocatoria || '-';
+                        row.insertCell(4).textContent = subject.grade || '-';
+                    });
+                } else {
+                    additionalContainer.style.display = 'none';
+                }
+            } else {
+                additionalContainer.style.display = 'none';
+            }
+            
+            // Calculate and update credits info including additional subjects
+            let totalCreditsFromData = data ? data.totalCredits : 0;
+            let additionalCredits = 0;
+            
+            if (data && data.subjects) {
+                const additionalSubjects = data.subjects.filter(studentSubject => {
+                    // Exclude if it matches a subject in the career plan
+                    if (matchedSubjects.some(matched => matched.name === studentSubject.name)) {
+                        return false;
+                    }
+                    
+                    // Exclude English subjects and Vinculación con el Medio
+                    const subjectName = studentSubject.name.toLowerCase();
+                    if (subjectName.includes('inglés') || subjectName.includes('ingles') || subjectName.includes('english')) {
+                        return false;
+                    }
+                    if (subjectName.includes('vinculación con el medio') || subjectName.includes('vinculacion con el medio')) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+                
+                additionalCredits = additionalSubjects.reduce((sum, subject) => sum + (subject.credits || 0), 0);
+            }
+            
+            // Update credits info with total including additional subjects
+            const totalCreditsWithAdditional = totalCreditsFromData + additionalCredits;
+            const requiredCredits = data ? data.requiredCredits : (currentCareerPlan ? currentCareerPlan.totalCredits : 0);
+            
+            // Calculate progress percentage, capping at 100%
+            if (requiredCredits > 0) {
+                progressPercentage = Math.min(100, (totalCreditsWithAdditional / requiredCredits) * 100);
+            }
+            
+            // Update progress bar
+            progressFill.style.width = progressPercentage + '%';
+            progressText.textContent = Math.round(progressPercentage) + '%';
+            
+            // Update credits display
+            document.getElementById('totalCredits').textContent = totalCreditsWithAdditional;
+            document.getElementById('requiredCredits').textContent = requiredCredits;
+            document.getElementById('remainingCredits').textContent = Math.max(0, requiredCredits - totalCreditsWithAdditional);
             
             // Update last update time
             if (data && data.lastUpdated) {

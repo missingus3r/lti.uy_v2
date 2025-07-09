@@ -1,0 +1,1178 @@
+1. Backend - Controlador Principal (assistantController.js)
+
+  const { GoogleGenerativeAI } = require('@google/generative-ai');
+  const { Cooperativa, User, Payment, Event, Document, Product, Order, Commission, Vote, Rule, Sanction,
+  ChatHistory, Contribution } = require('../models');
+
+  /**
+   * Helper function to build conversation history for context
+   */
+  function buildConversationHistory(messages) {
+    if (!messages || messages.length === 0) {
+      return '';
+    }
+
+    let conversationHistory = '\n\nHISTORIAL DE LA CONVERSACIÓN';
+    const recentMessages = messages.slice(-10); // Last 10 messages to avoid token limits
+
+    if (messages.length > 10) {
+      conversationHistory += ` (últimos 10 mensajes de ${messages.length} total)`;
+    }
+
+    conversationHistory += ':\n';
+
+    recentMessages.forEach(msg => {
+      // Truncate very long messages to avoid token limits
+      const content = msg.content.length > 500 ? msg.content.substring(0, 500) + '...' : msg.content;
+      conversationHistory += `${msg.role.toUpperCase()}: ${content}\n`;
+    });
+
+    return conversationHistory;
+  }
+
+  /**
+   * Chat endpoint for AI assistant.
+   * Uses Google Gemini API with context from the cooperative, its users, and payments.
+   */
+  exports.chat = async (req, res) => {
+    try {
+      const { question, sessionId } = req.body;
+      if (!question) return res.status(400).json({ error: 'Pregunta requerida' });
+
+      const cooperativaId = req.session.user.cooperativaId;
+      const userId = req.session.user.id || req.session.user._id;
+
+      console.log('🤖 Assistant request:', {
+        userId,
+        cooperativaId,
+        question: question.substring(0, 50) + '...',
+        sessionId
+      });
+
+      if (!cooperativaId) return res.status(400).json({ error: 'Sin cooperativa asignada' });
+      // Verificar acceso según plan (premium o gratuito permite AI)
+      const coop = await Cooperativa.findById(cooperativaId).lean();
+      const premiumPrice = parseFloat(process.env.TIER_PREMIUM_PRICE) || 2999;
+      const basicPrice = parseFloat(process.env.TIER_BASIC_PRICE) || 0;
+
+      console.log('🤖 Subscription check:', {
+        coopName: coop?.name,
+        subscription: coop?.subscription,
+        premiumPrice,
+        basicPrice
+      });
+
+      const hasAI = coop && coop.subscription &&
+                    (coop.subscription.price >= premiumPrice ||
+                     coop.subscription.price === basicPrice);
+
+      if (!hasAI) {
+        console.log('❌ AI access denied - subscription price:', coop?.subscription?.price);
+        return res.status(403).json({ error: 'Asistente no disponible en tu plan' });
+      }
+
+      // Load comprehensive cooperative data excluding sensitive information
+      const currentUser = await User.findById(userId).lean();
+
+      // Get regular members (exclude admins and sensitive data like emails, cedulas)
+      const users = await User.find({
+        cooperativaId,
+        role: { $ne: 'cooperativa-admin' }
+      }).select('firstName lastName memberType dateOfBirth status createdAt').lean();
+
+      // Get payment summaries (exclude individual amounts and personal identifiers)
+      const payments = await Payment.find({ cooperativaId }).select('category status amount paymentDate
+  createdAt').lean();
+
+      // Get events
+      const events = await Event.find({ cooperativaId }).select('title description startDate endDate location color
+   requiresCheckIn requiresCheckOut hasCost cost status').lean();
+
+      // Get documents (exclude file paths for security)
+      const documents = await Document.find({ cooperativaId }).select('name description category tags uploadDate
+  size fileType').lean();
+
+      // Get products
+      const products = await Product.find({ cooperativaId }).select('name description price category status
+  availability deadlineDate').lean();
+
+      // Get orders (exclude user details for privacy)
+      const orders = await Order.find({ cooperativaId }).select('productId quantity totalPrice status orderDate
+  deliveryDate').populate('productId', 'name price').lean();
+
+      // Get commissions (exclude member personal data)
+      const commissions = await Commission.find({ cooperativaId }).select('name description purpose members.role
+  createdAt').lean();
+
+      // Get votes (exclude individual voter data)
+      const votes = await Vote.find({ cooperativaId }).select('title description options startDate endDate status
+  totalVotes').lean();
+
+      // Get active rules (general cooperative rules, no personal data)
+      const rules = await Rule.find({ cooperativaId, isActive: true }).select('name description conditions
+  consequences category').lean();
+
+      // Get sanctions ONLY for the current logged-in user
+      const userSanctions = await Sanction.find({
+        cooperativaId,
+        userId,
+        isActive: true
+      }).select('type description severity startDate endDate category').lean();
+
+      // Get user's personal financial data
+      const userPayments = await Payment.find({
+        cooperativaId,
+        userId
+      }).select('amount description category paymentDate dueDate status paymentMethod reference').lean();
+
+      // Get user's contributions
+      const userContributions = await Contribution.find({
+        cooperativaId,
+        userId
+      }).select('type amount hours date description').lean();
+
+      // Build comprehensive context with privacy protections
+      const context = {
+        cooperative: {
+          name: coop.name,
+          status: coop.status,
+          location: coop.location,
+          foundedDate: coop.foundedDate,
+          totalMembers: coop.totalMembers,
+          description: coop.description,
+          contact: {
+            phone: coop.phone,
+            website: coop.website
+          },
+          subscription: {
+            tier: coop.subscription?.tier,
+            status: coop.subscription?.status,
+            plan: coop.subscription?.tier
+          },
+          // Include global cooperative financial data
+          financialData: coop.financialData,
+          settings: {
+            timezone: coop.timezone || 'America/Montevideo',
+            currency: coop.currency || 'UYU'
+          }
+        },
+        currentUser: {
+          name: `${currentUser.firstName} ${currentUser.lastName}`,
+          username: currentUser.username,
+          role: currentUser.role,
+          memberType: currentUser.memberType,
+          status: currentUser.status,
+          joinDate: currentUser.createdAt,
+          // Include current user's sanctions only
+          activeSanctions: userSanctions.map(s => ({
+            type: s.type,
+            description: s.description,
+            severity: s.severity,
+            category: s.category,
+            endDate: s.endDate
+          })),
+          // Include user's personal financial data
+          financialData: {
+            payments: {
+              total: userPayments.length,
+              pending: userPayments.filter(p => p.status === 'pending'),
+              completed: userPayments.filter(p => p.status === 'completed'),
+              totalPaid: userPayments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0),
+              totalDebt: userPayments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0),
+              byCategory: userPayments.reduce((acc, p) => {
+                if (!acc[p.category]) acc[p.category] = { count: 0, pending: 0, completed: 0, totalAmount: 0 };
+                acc[p.category].count++;
+                acc[p.category][p.status]++;
+                acc[p.category].totalAmount += p.amount;
+                return acc;
+              }, {}),
+              recentPayments: userPayments.sort((a, b) => new Date(b.paymentDate) - new
+  Date(a.paymentDate)).slice(0, 5),
+              overdueDebts: userPayments.filter(p => p.status === 'pending' && p.dueDate && new Date(p.dueDate) <
+  new Date())
+            },
+            contributions: {
+              total: userContributions.length,
+              totalAmount: userContributions.reduce((sum, c) => sum + (c.amount || 0), 0),
+              totalHours: userContributions.reduce((sum, c) => sum + (c.hours || 0), 0),
+              byType: userContributions.reduce((acc, c) => {
+                if (!acc[c.type]) acc[c.type] = { count: 0, totalAmount: 0, totalHours: 0 };
+                acc[c.type].count++;
+                acc[c.type].totalAmount += c.amount || 0;
+                acc[c.type].totalHours += c.hours || 0;
+                return acc;
+              }, {}),
+              recentContributions: userContributions.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0,
+  5)
+            }
+          }
+        },
+        members: {
+          total: users.length,
+          byType: users.reduce((acc, u) => {
+            acc[u.memberType || 'regular'] = (acc[u.memberType || 'regular'] || 0) + 1;
+            return acc;
+          }, {}),
+          byStatus: users.reduce((acc, u) => {
+            acc[u.status || 'active'] = (acc[u.status || 'active'] || 0) + 1;
+            return acc;
+          }, {}),
+          recentJoins: users.filter(u => new Date(u.createdAt) > new Date(Date.now() - 30*24*60*60*1000)).length,
+          // Only include non-sensitive member info (names only, no emails or cedulas)
+          memberNames: users.map(u => `${u.firstName} ${u.lastName}`)
+        },
+        // Global financial summary (no individual member data)
+        financialSummary: {
+          totalPayments: payments.length,
+          totalCollected: payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + (p.amount || 0),
+  0),
+          totalPending: payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + (p.amount || 0), 0),
+          paymentsByCategory: payments.reduce((acc, p) => {
+            acc[p.category] = (acc[p.category] || 0) + 1;
+            return acc;
+          }, {}),
+          monthlyTrend: {
+            thisMonth: payments.filter(p => new Date(p.paymentDate) >= new Date(new Date().getFullYear(), new
+  Date().getMonth(), 1)).length,
+            lastMonth: payments.filter(p => {
+              const lastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+              const thisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+              return new Date(p.paymentDate) >= lastMonth && new Date(p.paymentDate) < thisMonth;
+            }).length
+          }
+        },
+        events: {
+          total: events.length,
+          upcoming: events.filter(e => new Date(e.startDate) > new Date()).length,
+          withCost: events.filter(e => e.hasCost).length,
+          recentEvents: events.filter(e => new Date(e.startDate) > new Date()).slice(0, 5).map(e => ({
+            title: e.title,
+            date: e.startDate,
+            location: e.location,
+            hasCost: e.hasCost,
+            cost: e.hasCost ? e.cost : null
+          }))
+        },
+        documents: {
+          total: documents.length,
+          byCategory: documents.reduce((acc, d) => {
+            acc[d.category] = (acc[d.category] || 0) + 1;
+            return acc;
+          }, {}),
+          recentUploads: documents.sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate)).slice(0,
+  5).map(d => ({
+            name: d.name,
+            category: d.category,
+            uploadDate: d.uploadDate,
+            size: d.size
+          }))
+        },
+        products: {
+          total: products.length,
+          available: products.filter(p => p.status === 'available').length,
+          byCategory: products.reduce((acc, p) => {
+            acc[p.category || 'general'] = (acc[p.category || 'general'] || 0) + 1;
+            return acc;
+          }, {}),
+          activeProducts: products.filter(p => p.status === 'available').slice(0, 5).map(p => ({
+            name: p.name,
+            price: p.price,
+            category: p.category,
+            deadline: p.deadlineDate
+          }))
+        },
+        orders: {
+          total: orders.length,
+          pending: orders.filter(o => o.status === 'pending').length,
+          completed: orders.filter(o => o.status === 'completed').length,
+          totalValue: orders.reduce((sum, o) => sum + (o.totalPrice || 0), 0)
+        },
+        governance: {
+          commissions: {
+            total: commissions.length,
+            active: commissions.filter(c => c.members && c.members.length > 0).length,
+            list: commissions.map(c => ({
+              name: c.name,
+              description: c.description,
+              memberCount: c.members ? c.members.length : 0
+            }))
+          },
+          votes: {
+            total: votes.length,
+            active: votes.filter(v => v.status === 'active').length,
+            recent: votes.sort((a, b) => new Date(b.startDate) - new Date(a.startDate)).slice(0, 3).map(v => ({
+              title: v.title,
+              status: v.status,
+              totalVotes: v.totalVotes,
+              endDate: v.endDate
+            }))
+          },
+          rules: {
+            total: rules.length,
+            byCategory: rules.reduce((acc, r) => {
+              acc[r.category] = (acc[r.category] || 0) + 1;
+              return acc;
+            }, {}),
+            list: rules.map(r => ({
+              name: r.name,
+              description: r.description,
+              category: r.category
+            }))
+          }
+        }
+      };
+
+      // Handle chat history - Load existing session BEFORE generating response
+      let chatSession;
+      let conversationHistory = '';
+
+      if (sessionId) {
+        // Find existing chat session
+        chatSession = await ChatHistory.findOne({ sessionId, userId });
+        if (!chatSession) {
+          return res.status(400).json({ error: 'Sesión de chat no encontrada' });
+        }
+
+        // Build conversation history for context
+        conversationHistory = buildConversationHistory(chatSession.messages);
+      } else {
+        // Create new chat session
+        chatSession = ChatHistory.createSession(userId, cooperativaId);
+      }
+
+      // Configure Google Gemini
+      const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      // Prepare prompt with context and conversation history
+      const prompt = `Eres un asistente virtual de MiCope.org, una plataforma para gestión de cooperativas de
+  vivienda.
+
+  CONTEXTO DE LA COOPERATIVA:
+  ${JSON.stringify(context, null, 2)}
+
+  INSTRUCCIONES:
+  - Responde en español de manera amigable y profesional
+  - Usa la información del contexto para dar respuestas precisas
+  - Si no tienes información suficiente, dilo claramente
+  - Enfócate en ayudar con temas relacionados a la cooperativa
+  - Mantén las respuestas concisas pero informativas
+  - Usa el historial de la conversación para mantener contexto y continuidad
+  - Tienes acceso a los datos financieros personales del usuario (deudas, pagos y aportes)
+  - Puedes ayudar al usuario a entender su situación financiera en la cooperativa
+  - Respeta la privacidad y no compartas datos personales de otros miembros${conversationHistory}
+
+  PREGUNTA ACTUAL DEL USUARIO:
+  ${question}`;
+
+      // Call Gemini
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const answer = response.text();
+
+      // Add user question and assistant response to history
+      chatSession.addMessage('user', question);
+      chatSession.addMessage('assistant', answer);
+
+      // Save chat history
+      await chatSession.save();
+
+      res.json({
+        answer,
+        sessionId: chatSession.sessionId,
+        messageCount: chatSession.metadata.totalMessages
+      });
+    } catch (err) {
+      console.error('Assistant error:', err);
+
+      // Handle specific errors
+      let errorMessage = 'Error en el asistente';
+      let statusCode = 500;
+
+      if (err.message && err.message.includes('API key')) {
+        errorMessage = 'Error de configuración del asistente';
+        statusCode = 500;
+      } else if (err.message && err.message.includes('quota')) {
+        errorMessage = 'Límite de consultas alcanzado. Intenta más tarde';
+        statusCode = 429;
+      } else if (err.message && err.message.includes('safety')) {
+        errorMessage = 'La consulta contiene contenido inapropiado';
+        statusCode = 400;
+      } else if (err.message && err.message.includes('timeout')) {
+        errorMessage = 'La consulta tardó demasiado. Intenta nuevamente';
+        statusCode = 408;
+      } else if (err.status === 400) {
+        errorMessage = 'Solicitud inválida para el asistente';
+        statusCode = 400;
+      } else if (err.status === 401 || err.status === 403) {
+        errorMessage = 'Error de autenticación con el servicio de IA';
+        statusCode = 500;
+      }
+
+      res.status(statusCode).json({ error: errorMessage });
+    }
+  };
+
+  /**
+   * Get user's chat history
+   */
+  exports.getChatHistory = async (req, res) => {
+    try {
+      const userId = req.session.user.id || req.session.user._id;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const chatHistory = await ChatHistory.getRecentChats(userId, limit);
+
+      res.json({ chatHistory });
+    } catch (err) {
+      console.error('Get chat history error:', err);
+      res.status(500).json({ error: 'Error al obtener historial de chat' });
+    }
+  };
+
+  /**
+   * Get specific chat session
+   */
+  exports.getChatSession = async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = req.session.user.id || req.session.user._id;
+
+      const chatSession = await ChatHistory.getChatBySession(sessionId, userId);
+
+      if (!chatSession) {
+        return res.status(404).json({ error: 'Sesión de chat no encontrada' });
+      }
+
+      res.json({ chatSession });
+    } catch (err) {
+      console.error('Get chat session error:', err);
+      res.status(500).json({ error: 'Error al obtener sesión de chat' });
+    }
+  };
+
+  /**
+   * Delete chat session
+   */
+  exports.deleteChatSession = async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const userId = req.session.user.id || req.session.user._id;
+
+      const result = await ChatHistory.deleteOne({ sessionId, userId });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ error: 'Sesión de chat no encontrada' });
+      }
+
+      res.json({ success: true, message: 'Sesión de chat eliminada' });
+    } catch (err) {
+      console.error('Delete chat session error:', err);
+      res.status(500).json({ error: 'Error al eliminar sesión de chat' });
+    }
+  };
+
+  /**
+   * Clear all user chat history
+   */
+  exports.clearChatHistory = async (req, res) => {
+    try {
+      const userId = req.session.user.id || req.session.user._id;
+
+      const result = await ChatHistory.deleteMany({ userId });
+
+      res.json({
+        success: true,
+        message: `${result.deletedCount} sesiones de chat eliminadas`
+      });
+    } catch (err) {
+      console.error('Clear chat history error:', err);
+      res.status(500).json({ error: 'Error al limpiar historial de chat' });
+    }
+  };
+
+  2. Rutas (assistant.js)
+
+  const express = require('express');
+  const router = express.Router();
+  const { checkAuth } = require('../middleware/auth');
+  const assistantController = require('../controllers/assistantController');
+
+  // AI Assistant endpoints
+  router.post('/assistant', checkAuth, assistantController.chat);
+  router.get('/assistant/history', checkAuth, assistantController.getChatHistory);
+  router.get('/assistant/session/:sessionId', checkAuth, assistantController.getChatSession);
+  router.delete('/assistant/session/:sessionId', checkAuth, assistantController.deleteChatSession);
+  router.delete('/assistant/history', checkAuth, assistantController.clearChatHistory);
+
+  module.exports = router;
+
+  3. Modelo MongoDB (ChatHistory.js)
+
+  const mongoose = require('mongoose');
+
+  /**
+   * ChatHistory model for storing AI assistant conversations
+   */
+  const ChatHistorySchema = new mongoose.Schema({
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true
+    },
+    cooperativaId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Cooperativa',
+      required: true,
+      index: true
+    },
+    sessionId: {
+      type: String,
+      required: true,
+      index: true
+    },
+    messages: [{
+      role: {
+        type: String,
+        enum: ['user', 'assistant'],
+        required: true
+      },
+      content: {
+        type: String,
+        required: true
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    metadata: {
+      model: {
+        type: String,
+        default: 'gemini-2.0-flash'
+      },
+      totalMessages: {
+        type: Number,
+        default: 0
+      },
+      lastActivity: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  }, {
+    timestamps: true
+  });
+
+  // Index for efficient queries
+  ChatHistorySchema.index({ userId: 1, cooperativaId: 1, 'metadata.lastActivity': -1 });
+  ChatHistorySchema.index({ sessionId: 1 });
+
+  // Update metadata before saving
+  ChatHistorySchema.pre('save', function(next) {
+    this.metadata.totalMessages = this.messages.length;
+    this.metadata.lastActivity = new Date();
+    next();
+  });
+
+  // Static method to create new chat session
+  ChatHistorySchema.statics.createSession = function(userId, cooperativaId) {
+    const sessionId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return new this({
+      userId,
+      cooperativaId,
+      sessionId,
+      messages: [],
+      metadata: {
+        totalMessages: 0,
+        lastActivity: new Date()
+      }
+    });
+  };
+
+  // Instance method to add message
+  ChatHistorySchema.methods.addMessage = function(role, content) {
+    this.messages.push({
+      role,
+      content,
+      timestamp: new Date()
+    });
+    this.metadata.totalMessages = this.messages.length;
+    this.metadata.lastActivity = new Date();
+  };
+
+  // Static method to get user's recent chats
+  ChatHistorySchema.statics.getRecentChats = function(userId, limit = 10) {
+    return this.find({ userId })
+      .sort({ 'metadata.lastActivity': -1 })
+      .limit(limit)
+      .select('sessionId metadata.lastActivity metadata.totalMessages messages')
+      .lean();
+  };
+
+  // Static method to get chat by session
+  ChatHistorySchema.statics.getChatBySession = function(sessionId, userId) {
+    return this.findOne({ sessionId, userId }).lean();
+  };
+
+  module.exports = mongoose.model('ChatHistory', ChatHistorySchema);
+
+  4. HTML del Widget (footer.ejs)
+
+  <div id="assistant-overlay"></div>
+
+  <div id="assistant-widget">
+    <button id="assistant-toggle" title="Asistente de IA" data-intro="Usa el asistente de IA para hacer preguntas
+  sobre la cooperativa, pagos, eventos y obtener ayuda personalizada." data-step="9">🤖</button>
+    <div id="assistant-popup">
+      <div id="assistant-header">
+        <h3>
+          <i class="material-icons">smart_toy</i>
+          Asistente de IA
+        </h3>
+        <div id="assistant-header-buttons">
+          <button id="assistant-history-btn" title="Historial de chat">
+            <i class="material-icons">history</i>
+          </button>
+          <button id="assistant-new-chat" title="Nueva conversación">
+            <i class="material-icons">add</i>
+          </button>
+          <button id="assistant-close" title="Cerrar">×</button>
+        </div>
+      </div>
+      <div id="assistant-messages">
+        <div class="assistant-empty-state">
+          <i class="material-icons">chat</i>
+          <h4>¡Hola! Soy tu asistente de IA</h4>
+          <p>Pregúntame cualquier cosa sobre la cooperativa, pagos, eventos o cualquier duda que tengas.</p>
+        </div>
+      </div>
+      <form id="assistant-form">
+        <input type="text" id="assistant-input" placeholder="Escribe tu pregunta aquí..." autocomplete="off" />
+        <button type="submit" id="assistant-send">Enviar</button>
+      </form>
+
+      <!-- AI Disclaimer -->
+      <div id="assistant-disclaimer">
+        <i class="material-icons">info</i>
+        <span>Los datos generados por la IA pueden tener errores, siempre corroborarlos.</span>
+      </div>
+
+      <!-- History Panel -->
+      <div id="assistant-history-panel">
+        <div id="assistant-history-header">
+          <h3>
+            <i class="material-icons">history</i>
+            Historial de Chat
+          </h3>
+          <div>
+            <button id="assistant-clear-history" title="Limpiar historial">
+              <i class="material-icons">delete_sweep</i>
+            </button>
+            <button id="assistant-history-close" title="Cerrar historial">
+              <i class="material-icons">close</i>
+            </button>
+          </div>
+        </div>
+        <div id="assistant-history-list">
+          <div class="history-empty">
+            <i class="material-icons">chat_bubble_outline</i>
+            <p>No hay conversaciones anteriores</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  5. JavaScript del Frontend (main.js)
+
+  // Function to initialize AI assistant functionality
+  function initializeAssistant() {
+    const toggleBtn = document.getElementById('assistant-toggle');
+    const popup = document.getElementById('assistant-popup');
+    const overlay = document.getElementById('assistant-overlay');
+    const menuLink = document.getElementById('assistant-menu-link');
+    const closeBtn = document.getElementById('assistant-close');
+    const form = document.getElementById('assistant-form');
+    const input = document.getElementById('assistant-input');
+    const messages = document.getElementById('assistant-messages');
+
+    // History panel elements
+    const historyBtn = document.getElementById('assistant-history-btn');
+    const newChatBtn = document.getElementById('assistant-new-chat');
+    const historyPanel = document.getElementById('assistant-history-panel');
+    const historyCloseBtn = document.getElementById('assistant-history-close');
+    const clearHistoryBtn = document.getElementById('assistant-clear-history');
+    const historyList = document.getElementById('assistant-history-list');
+
+    // Current session state
+    let currentSessionId = null;
+
+    // Connect menu link to toggle button
+    if (menuLink && toggleBtn) {
+      menuLink.addEventListener('click', e => {
+        e.preventDefault();
+        toggleBtn.click();
+      });
+    }
+
+    // Toggle popup visibility
+    if (toggleBtn && popup && overlay) {
+      toggleBtn.addEventListener('click', () => {
+        const isVisible = popup.style.display === 'flex';
+        if (isVisible) {
+          closeAssistant();
+        } else {
+          openAssistant();
+        }
+      });
+    }
+
+    // Close popup functions
+    function closeAssistant() {
+      if (popup && overlay) {
+        popup.style.display = 'none';
+        overlay.style.display = 'none';
+        document.body.classList.remove('modal-open');
+      }
+    }
+
+    function openAssistant() {
+      if (popup && overlay) {
+        popup.style.display = 'flex';
+        overlay.style.display = 'block';
+        document.body.classList.add('modal-open');
+      }
+    }
+
+    // Close popup on close button
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeAssistant);
+    }
+
+    // Close popup on overlay click
+    if (overlay) {
+      overlay.addEventListener('click', closeAssistant);
+    }
+
+    // Close popup on escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && popup && popup.style.display === 'flex') {
+        closeAssistant();
+      }
+    });
+
+    // Handle form submission
+    if (form && input && messages) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const question = input.value.trim();
+        if (!question) return;
+
+        // Clear empty state if it exists
+        const emptyState = messages.querySelector('.assistant-empty-state');
+        if (emptyState) {
+          emptyState.remove();
+        }
+
+        // Add user message
+        const userMsg = document.createElement('div');
+        userMsg.className = 'message user-message';
+        userMsg.innerHTML = `<div class="message-content">${question}</div>`;
+        messages.appendChild(userMsg);
+
+        // Clear input
+        input.value = '';
+
+        // Add loading message
+        const loadingMsg = document.createElement('div');
+        loadingMsg.className = 'message assistant-message loading';
+        loadingMsg.innerHTML = `<div class="message-content">Pensando...</div>`;
+        messages.appendChild(loadingMsg);
+
+        // Scroll to bottom
+        messages.scrollTop = messages.scrollHeight;
+
+        try {
+          // Get CSRF token
+          const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                           document.querySelector('input[name="_csrf"]')?.value;
+
+          const headers = { 'Content-Type': 'application/json' };
+          if (csrfToken) {
+            headers['X-CSRF-Token'] = csrfToken;
+          }
+
+          const response = await fetch('/assistant', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ question, sessionId: currentSessionId })
+          });
+
+          // Remove loading message
+          loadingMsg.remove();
+
+          if (response.ok) {
+            const data = await response.json();
+
+            if (data.answer) {
+              // Update current session ID
+              if (data.sessionId) {
+                currentSessionId = data.sessionId;
+              }
+
+              // Add assistant response
+              const assistantMsg = document.createElement('div');
+              assistantMsg.className = 'message assistant-message';
+              assistantMsg.innerHTML = `<div class="message-content">${parseMarkdown(data.answer)}</div>`;
+              messages.appendChild(assistantMsg);
+            } else {
+              // Add error message
+              const errorMsg = document.createElement('div');
+              errorMsg.className = 'message assistant-message error';
+              const errorText = data.error || 'No se pudo obtener una respuesta del asistente';
+              errorMsg.innerHTML = `<div class="message-content">❌ ${errorText}</div>`;
+              messages.appendChild(errorMsg);
+            }
+          } else {
+            // Handle HTTP errors
+            const data = await response.json().catch(() => ({}));
+            const errorMsg = document.createElement('div');
+            errorMsg.className = 'message assistant-message error';
+
+            let errorText = 'Error inesperado';
+            if (response.status === 403) {
+              errorText = 'El asistente no está disponible en tu plan actual';
+            } else if (response.status === 400) {
+              errorText = data.error || 'Solicitud inválida';
+            } else if (response.status === 408) {
+              errorText = '⏱️ La consulta tardó demasiado tiempo. Intenta nuevamente';
+            } else if (response.status === 429) {
+              errorText = '⏰ Límite de consultas alcanzado. Intenta más tarde';
+            } else if (response.status === 500) {
+              errorText = 'Error interno del servidor. Intenta nuevamente en unos momentos';
+            } else if (response.status >= 400 && response.status < 500) {
+              errorText = data.error || 'Error en la solicitud';
+            } else {
+              errorText = 'Error del servidor. Intenta nuevamente más tarde';
+            }
+
+            errorMsg.innerHTML = `<div class="message-content">❌ ${errorText}</div>`;
+            messages.appendChild(errorMsg);
+          }
+        } catch (error) {
+          // Remove loading message
+          loadingMsg.remove();
+
+          // Add error message
+          const errorMsg = document.createElement('div');
+          errorMsg.className = 'message assistant-message error';
+
+          let errorText = '🔌 Error de conexión';
+          if (error.name === 'TypeError' && error.message.includes('fetch')) {
+            errorText = '🔌 No se pudo conectar con el servidor. Verifica tu conexión a internet';
+          } else if (error.name === 'AbortError') {
+            errorText = '⏱️ La solicitud tardó demasiado. Intenta nuevamente';
+          } else {
+            errorText = '❌ Error inesperado. Intenta nuevamente en unos momentos';
+          }
+
+          errorMsg.innerHTML = `<div class="message-content">${errorText}</div>`;
+          messages.appendChild(errorMsg);
+
+          console.error('Assistant error:', error);
+        }
+
+        // Scroll to bottom
+        messages.scrollTop = messages.scrollHeight;
+      });
+    }
+
+    // History panel event listeners
+    if (historyBtn) {
+      historyBtn.addEventListener('click', () => {
+        showHistoryPanel();
+      });
+    }
+
+    if (newChatBtn) {
+      newChatBtn.addEventListener('click', () => {
+        startNewChat();
+      });
+    }
+
+    if (historyCloseBtn) {
+      historyCloseBtn.addEventListener('click', () => {
+        hideHistoryPanel();
+      });
+    }
+
+    if (clearHistoryBtn) {
+      clearHistoryBtn.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de que quieres eliminar todo el historial de chat?')) {
+          clearAllHistory();
+        }
+      });
+    }
+
+    // History panel functions
+    function showHistoryPanel() {
+      if (historyPanel) {
+        historyPanel.style.display = 'flex';
+        loadChatHistory();
+      }
+    }
+
+    function hideHistoryPanel() {
+      if (historyPanel) {
+        historyPanel.style.display = 'none';
+      }
+    }
+
+    function startNewChat() {
+      currentSessionId = null;
+      clearMessages();
+      hideHistoryPanel();
+    }
+
+    function clearMessages() {
+      if (messages) {
+        messages.innerHTML = `
+          <div class="assistant-empty-state">
+            <i class="material-icons">chat</i>
+            <h4>¡Hola! Soy tu asistente de IA</h4>
+            <p>Pregúntame cualquier cosa sobre la cooperativa, pagos, eventos o cualquier duda que tengas.</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadChatHistory() {
+      try {
+        const response = await fetch('/assistant/history');
+        const data = await response.json();
+
+        if (data.chatHistory && data.chatHistory.length > 0) {
+          displayChatHistory(data.chatHistory);
+        } else {
+          displayEmptyHistory();
+        }
+      } catch (error) {
+        console.error('Error loading chat history:', error);
+        displayEmptyHistory();
+      }
+    }
+
+    function displayChatHistory(chatHistory) {
+      if (!historyList) return;
+
+      historyList.innerHTML = '';
+
+      chatHistory.forEach(chat => {
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+
+        const lastMessage = chat.messages && chat.messages.length > 0
+          ? chat.messages[chat.messages.length - 1]
+          : null;
+
+        // Create a clean preview without markdown formatting
+        const cleanPreview = (text) => {
+          if (!text) return text;
+
+          // Handle tables first - convert to simple text summary
+          let cleaned = text.replace(/\|([^|]+)\|/g, (match, content) => {
+            // If this looks like a table row, convert to simple text
+            if (match.includes('|')) {
+              return content.trim();
+            }
+            return match;
+          });
+
+          // Remove table separator lines
+          cleaned = cleaned.replace(/^\|[\s\-\|]+\|$/gm, '');
+
+          // If text contains multiple table-like lines, summarize
+          const tableLines = cleaned.split('\n').filter(line =>
+            line.includes('|') && line.split('|').length >= 3
+          );
+
+          if (tableLines.length >= 2) {
+            cleaned = `📊 Tabla con ${tableLines.length} filas`;
+          }
+
+          return cleaned
+            .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold
+            .replace(/^(\s*)\* (.+)$/gm, '$1• $2') // Convert * lists to bullets
+            .replace(/^(\s*)- (.+)$/gm, '$1• $2') // Convert - lists to bullets
+            .replace(/\*([^*\s][^*]*[^*\s])\*/g, '$1') // Remove italics (multi-word)
+            .replace(/\*([^*\s]+)\*/g, '$1') // Remove italics (single word)
+            .replace(/\n+/g, ' ') // Replace multiple newlines with space
+            .trim();
+        };
+
+        const preview = lastMessage
+          ? (lastMessage.role === 'user' ? cleanPreview(lastMessage.content) : 'Asistente: ' +
+  cleanPreview(lastMessage.content))
+          : 'Conversación vacía';
+
+        const date = new Date(chat.metadata.lastActivity).toLocaleString('es-ES', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        historyItem.innerHTML = `
+          <div class="history-item-date">${date}</div>
+          <div class="history-item-preview">${preview}</div>
+          <div class="history-item-meta">
+            <span>${chat.metadata.totalMessages} mensajes</span>
+            <button class="history-item-delete" onclick="deleteChatSession('${chat.sessionId}')">
+              Eliminar
+            </button>
+          </div>
+        `;
+
+        historyItem.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('history-item-delete')) {
+            loadChatSession(chat.sessionId);
+          }
+        });
+
+        historyList.appendChild(historyItem);
+      });
+    }
+
+    function displayEmptyHistory() {
+      if (historyList) {
+        historyList.innerHTML = `
+          <div class="history-empty">
+            <i class="material-icons">chat_bubble_outline</i>
+            <p>No hay conversaciones anteriores</p>
+          </div>
+        `;
+      }
+    }
+
+    async function loadChatSession(sessionId) {
+      try {
+        const response = await fetch(`/assistant/session/${sessionId}`);
+        const data = await response.json();
+
+        if (data.chatSession) {
+          currentSessionId = sessionId;
+          displayChatSession(data.chatSession);
+          hideHistoryPanel();
+        }
+      } catch (error) {
+        console.error('Error loading chat session:', error);
+      }
+    }
+
+    function displayChatSession(chatSession) {
+      if (!messages) return;
+
+      messages.innerHTML = '';
+
+      chatSession.messages.forEach(msg => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${msg.role}-message`;
+        // Apply markdown parsing only to assistant messages
+        const content = msg.role === 'assistant' ? parseMarkdown(msg.content) : msg.content;
+        messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+        messages.appendChild(messageDiv);
+      });
+
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function clearAllHistory() {
+      try {
+        const response = await fetch('/assistant/history', {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          loadChatHistory();
+          startNewChat();
+        }
+      } catch (error) {
+        console.error('Error clearing history:', error);
+      }
+    }
+
+    // Global function for deleting individual sessions
+    window.deleteChatSession = async function(sessionId) {
+      if (confirm('¿Eliminar esta conversación?')) {
+        try {
+          const response = await fetch(`/assistant/session/${sessionId}`, {
+            method: 'DELETE'
+          });
+
+          if (response.ok) {
+            loadChatHistory();
+            if (currentSessionId === sessionId) {
+              startNewChat();
+            }
+          }
+        } catch (error) {
+          console.error('Error deleting chat session:', error);
+        }
+      }
+    };
+  }
+
+  // Helper functions to hide/show assistant button when modals are open
+  function hideAssistantButton() {
+    const assistantToggle = document.getElementById('assistant-toggle');
+    if (assistantToggle) {
+      assistantToggle.style.display = 'none';
+    }
+  }
+
+  function showAssistantButton() {
+    const assistantToggle = document.getElementById('assistant-toggle');
+    if (assistantToggle) {
+      assistantToggle.style.display = 'flex';
+    }
+  }
+
+  6. Configuración en app.js
+
+  Para montar las rutas en tu aplicación principal:
+
+  // En app.js
+  const assistantRoutes = require('./src/routes/assistant');
+  app.use(assistantRoutes);
+
+  7. Variables de entorno necesarias
+
+  GOOGLE_GEMINI_API_KEY=tu_api_key_de_google_gemini
+  TIER_PREMIUM_PRICE=2999
+  TIER_BASIC_PRICE=0
+
+  8. Dependencias NPM necesarias
+
+  {
+    "@google/generative-ai": "^0.21.0"
+  }
+
+  Este es todo el código del módulo del asistente sin incluir los estilos CSS. El módulo incluye:
+
+  - Sistema completo de chat con IA usando Google Gemini
+  - Gestión de sesiones y historial de conversaciones
+  - Contexto completo de la cooperativa con privacidad
+  - Manejo de errores detallado
+  - Panel de historial de conversaciones
+  - Funciones para nueva conversación, eliminar historial, etc.
+
+  Para integrarlo en otra página necesitarás:
+  1. Instalar la dependencia de Google Generative AI
+  2. Configurar las variables de entorno
+  3. Agregar los modelos MongoDB necesarios
+  4. Montar las rutas en tu aplicación Express
+  5. Incluir el HTML del widget y el JavaScript en tus vistas
+  6. Adaptar la lógica de autenticación y permisos según tu sistema
