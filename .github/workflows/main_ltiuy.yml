@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - Ltiuy
+name: Build and deploy Node.js app to Azure Web App - ltiuy
 
 on:
   push:
@@ -59,15 +59,15 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_332F73F9D1B94BCD8BAA425D77EB5BE9 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B5E8862C3A9C4762BE2606F373D5EE1C }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_92167659CE4348ADBE529B97BAD01144 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_20EC66CE43304EC5B0ECF06C145A5BED }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4A36843769BF42939A1BFFB5AB2ABEDF }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_741B1E55B0754B65B4BF206B91A4657B }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'Ltiuy'
+          app-name: 'ltiuy'
           slot-name: 'Production'
           package: .
           restart: true
