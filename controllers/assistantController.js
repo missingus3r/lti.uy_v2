@@ -82,18 +82,25 @@ exports.chat = async (req, res) => {
         let chatSession;
         let conversationHistory = '';
 
-        if (sessionId) {
-            // Find existing chat session
-            chatSession = await ChatHistory.findOne({ sessionId, userId });
-            if (!chatSession) {
-                return res.status(400).json({ error: 'Sesión de chat no encontrada' });
-            }
-
-            // Build conversation history for context
-            conversationHistory = buildConversationHistory(chatSession.messages);
+        // Check if user is admin (userId is string "admin")
+        if (userId === 'admin') {
+            // Admin doesn't save chat history, just create a temporary session
+            chatSession = null;
+            conversationHistory = '';
         } else {
-            // Create new chat session
-            chatSession = ChatHistory.createSession(userId);
+            if (sessionId) {
+                // Find existing chat session
+                chatSession = await ChatHistory.findOne({ sessionId, userId });
+                if (!chatSession) {
+                    return res.status(400).json({ error: 'Sesión de chat no encontrada' });
+                }
+
+                // Build conversation history for context
+                conversationHistory = buildConversationHistory(chatSession.messages);
+            } else {
+                // Create new chat session
+                chatSession = ChatHistory.createSession(userId);
+            }
         }
 
         // Configure Google Gemini
@@ -129,18 +136,27 @@ ${question}`;
         const response = await result.response;
         const answer = response.text();
 
-        // Add user question and assistant response to history
-        chatSession.addMessage('user', question);
-        chatSession.addMessage('assistant', answer);
+        // Add user question and assistant response to history (only for non-admin users)
+        if (chatSession) {
+            chatSession.addMessage('user', question);
+            chatSession.addMessage('assistant', answer);
 
-        // Save chat history
-        await chatSession.save();
+            // Save chat history
+            await chatSession.save();
 
-        res.json({
-            answer,
-            sessionId: chatSession.sessionId,
-            messageCount: chatSession.metadata.totalMessages
-        });
+            res.json({
+                answer,
+                sessionId: chatSession.sessionId,
+                messageCount: chatSession.metadata.totalMessages
+            });
+        } else {
+            // Admin response without saving history
+            res.json({
+                answer,
+                sessionId: null,
+                messageCount: 0
+            });
+        }
     } catch (err) {
         console.error('Assistant error:', err);
 
@@ -185,6 +201,11 @@ exports.getChatHistory = async (req, res) => {
         const userId = req.session.user._id;
         const limit = parseInt(req.query.limit) || 10;
 
+        // Check if user is admin (userId is string "admin")
+        if (userId === 'admin') {
+            return res.json({ chatHistory: [] });
+        }
+
         const chatHistory = await ChatHistory.getRecentChats(userId, limit);
 
         res.json({ chatHistory });
@@ -206,6 +227,11 @@ exports.getChatSession = async (req, res) => {
 
         const { sessionId } = req.params;
         const userId = req.session.user._id;
+
+        // Check if user is admin (userId is string "admin")
+        if (userId === 'admin') {
+            return res.status(403).json({ error: 'El administrador no puede acceder a sesiones de chat específicas' });
+        }
 
         const chatSession = await ChatHistory.getChatBySession(sessionId, userId);
 
@@ -233,6 +259,11 @@ exports.deleteChatSession = async (req, res) => {
         const { sessionId } = req.params;
         const userId = req.session.user._id;
 
+        // Check if user is admin (userId is string "admin")
+        if (userId === 'admin') {
+            return res.status(403).json({ error: 'El administrador no puede eliminar sesiones de chat específicas' });
+        }
+
         const result = await ChatHistory.deleteOne({ sessionId, userId });
 
         if (result.deletedCount === 0) {
@@ -257,6 +288,14 @@ exports.clearChatHistory = async (req, res) => {
         }
 
         const userId = req.session.user._id;
+
+        // Check if user is admin (userId is string "admin")
+        if (userId === 'admin') {
+            return res.json({
+                success: true,
+                message: 'El administrador no tiene historial de chat para eliminar'
+            });
+        }
 
         const result = await ChatHistory.deleteMany({ userId });
 

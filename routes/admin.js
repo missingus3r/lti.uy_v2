@@ -109,6 +109,27 @@ router.get('/api/users', isAdmin, async (req, res) => {
 // Get chat history for admin
 router.get('/api/chat-history', isAdmin, assistantController.getAllChatHistory);
 
+// Get specific chat session for admin
+router.get('/api/chat-session/:sessionId', isAdmin, async (req, res) => {
+    try {
+        const { sessionId } = req.params;
+        const ChatHistory = require('../models/ChatHistory');
+        
+        const chatSession = await ChatHistory.findOne({ sessionId })
+            .populate('userId', 'username')
+            .lean();
+        
+        if (!chatSession) {
+            return res.status(404).json({ error: 'Sesión de chat no encontrada' });
+        }
+        
+        res.json({ chatSession });
+    } catch (err) {
+        console.error('Get chat session error:', err);
+        res.status(500).json({ error: 'Error al obtener sesión de chat' });
+    }
+});
+
 // Get blocked users
 router.get('/api/blocked-users', isAdmin, async (req, res) => {
     try {

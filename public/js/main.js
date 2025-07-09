@@ -673,9 +673,6 @@ function initializeAssistant() {
                     body: JSON.stringify({ question, sessionId: currentSessionId, context })
                 });
 
-                // Remove loading message
-                assistantMsg.remove();
-
                 if (response.ok) {
                     const data = await response.json();
 
@@ -685,24 +682,19 @@ function initializeAssistant() {
                             currentSessionId = data.sessionId;
                         }
 
-                        // Add assistant response
-                        const assistantMsg = document.createElement('div');
+                        // Replace loading message with assistant response
                         assistantMsg.className = 'message assistant-message';
                         assistantMsg.innerHTML = `<div class="message-content">${parseMarkdown(data.answer)}</div>`;
-                        messages.appendChild(assistantMsg);
                     } else {
-                        // Add error message
-                        const errorMsg = document.createElement('div');
-                        errorMsg.className = 'message assistant-message error';
+                        // Replace loading message with error message
+                        assistantMsg.className = 'message assistant-message error';
                         const errorText = data.error || 'No se pudo obtener una respuesta del asistente';
-                        errorMsg.innerHTML = `<div class="message-content">❌ ${errorText}</div>`;
-                        messages.appendChild(errorMsg);
+                        assistantMsg.innerHTML = `<div class="message-content">❌ ${errorText}</div>`;
                     }
                 } else {
                     // Handle HTTP errors
                     const data = await response.json().catch(() => ({}));
-                    const errorMsg = document.createElement('div');
-                    errorMsg.className = 'message assistant-message error';
+                    assistantMsg.className = 'message assistant-message error';
 
                     let errorText = 'Error inesperado';
                     if (response.status === 401) {
@@ -717,16 +709,11 @@ function initializeAssistant() {
                         errorText = 'Error interno del servidor. Intenta nuevamente en unos momentos';
                     }
 
-                    errorMsg.innerHTML = `<div class="message-content">❌ ${errorText}</div>`;
-                    messages.appendChild(errorMsg);
+                    assistantMsg.innerHTML = `<div class="message-content">❌ ${errorText}</div>`;
                 }
             } catch (error) {
-                // Remove loading message
-                assistantMsg.remove();
-
-                // Add error message
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'message assistant-message error';
+                // Replace loading message with error message
+                assistantMsg.className = 'message assistant-message error';
 
                 let errorText = '🔌 Error de conexión';
                 if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -737,8 +724,7 @@ function initializeAssistant() {
                     errorText = '❌ Error inesperado. Intenta nuevamente en unos momentos';
                 }
 
-                errorMsg.innerHTML = `<div class="message-content">${errorText}</div>`;
-                messages.appendChild(errorMsg);
+                assistantMsg.innerHTML = `<div class="message-content">${errorText}</div>`;
 
                 console.error('Assistant error:', error);
             }
@@ -988,7 +974,15 @@ function escapeHtml(text) {
 function parseMarkdown(text) {
     if (!text) return text;
     
-    return text
+    let result = text;
+    
+    // Handle tables first
+    result = parseMarkdownTables(result);
+    
+    // Handle lists
+    result = parseMarkdownLists(result);
+    
+    return result
         // Bold
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         // Italic
@@ -998,10 +992,111 @@ function parseMarkdown(text) {
         // Inline code
         .replace(/`([^`]+)`/g, '<code>$1</code>')
         // Line breaks
-        .replace(/\n/g, '<br>')
-        // Lists
-        .replace(/^\* (.+)$/gm, '<li>$1</li>')
-        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-        .replace(/^\- (.+)$/gm, '<li>$1</li>')
-        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+        .replace(/\n/g, '<br>');
+}
+
+// Parse markdown tables
+function parseMarkdownTables(text) {
+    const tableRegex = /(\|[^\n]+\|[\s]*\n)+/g;
+    
+    return text.replace(tableRegex, (match) => {
+        const lines = match.trim().split('\n');
+        if (lines.length < 2) return match;
+        
+        let tableHTML = '<table class="assistant-table">';
+        let isHeader = true;
+        
+        lines.forEach((line, index) => {
+            const trimmedLine = line.trim();
+            if (!trimmedLine.startsWith('|') || !trimmedLine.endsWith('|')) return;
+            
+            // Skip separator lines (contain only |, -, and spaces)
+            if (/^\|[\s\-|]+\|$/.test(trimmedLine)) return;
+            
+            const cells = trimmedLine.slice(1, -1).split('|').map(cell => cell.trim());
+            
+            if (isHeader) {
+                tableHTML += '<thead><tr>';
+                cells.forEach(cell => {
+                    tableHTML += `<th>${cell}</th>`;
+                });
+                tableHTML += '</tr></thead><tbody>';
+                isHeader = false;
+            } else {
+                tableHTML += '<tr>';
+                cells.forEach(cell => {
+                    tableHTML += `<td>${cell}</td>`;
+                });
+                tableHTML += '</tr>';
+            }
+        });
+        
+        tableHTML += '</tbody></table>';
+        return tableHTML;
+    });
+}
+
+// Parse markdown lists
+function parseMarkdownLists(text) {
+    const lines = text.split('\n');
+    const result = [];
+    let i = 0;
+    
+    while (i < lines.length) {
+        const line = lines[i].trim();
+        
+        // Check if it's a list item starting with *
+        if (line.startsWith('* ')) {
+            const listItems = [];
+            let listType = 'ul'; // Default to unordered list
+            
+            // Check if it's a numbered list by looking at the content
+            const content = line.substring(2).trim();
+            if (/^\d+\./.test(content) || isNumberedListContext(lines, i)) {
+                listType = 'ol';
+            }
+            
+            // Collect all consecutive list items
+            while (i < lines.length && lines[i].trim().startsWith('* ')) {
+                const itemContent = lines[i].trim().substring(2).trim();
+                // Remove number prefix if it exists for ordered lists
+                const cleanContent = listType === 'ol' ? itemContent.replace(/^\d+\.\s*/, '') : itemContent;
+                listItems.push(cleanContent);
+                i++;
+            }
+            
+            // Create the list HTML
+            const listHTML = `<${listType}>${listItems.map(item => `<li>${item}</li>`).join('')}</${listType}>`;
+            result.push(listHTML);
+            i--; // Back up one since the loop will increment
+        } else {
+            result.push(line);
+        }
+        i++;
+    }
+    
+    return result.join('\n');
+}
+
+// Helper function to determine if a list should be numbered
+function isNumberedListContext(lines, startIndex) {
+    // Look for numbered patterns in the first few items
+    for (let i = startIndex; i < Math.min(startIndex + 3, lines.length); i++) {
+        const line = lines[i].trim();
+        if (!line.startsWith('* ')) break;
+        
+        const content = line.substring(2).trim();
+        if (/^\d+\./.test(content)) return true;
+    }
+    
+    // Check if previous context suggests numbering
+    for (let i = Math.max(0, startIndex - 5); i < startIndex; i++) {
+        const line = lines[i].toLowerCase();
+        if (line.includes('pasos') || line.includes('etapas') || line.includes('fases') || 
+            line.includes('procedimiento') || line.includes('proceso') || line.includes('orden')) {
+            return true;
+        }
+    }
+    
+    return false;
 }
