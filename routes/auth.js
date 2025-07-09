@@ -91,25 +91,17 @@ router.post('/login', async (req, res) => {
             req.session.userHash = user.userHash;
             
             // Check if we need to fetch academic data
-            const needsUpdate = user.needsDataUpdate();
-            console.log(`User ${username} - needsDataUpdate: ${needsUpdate}, lastDataFetch: ${user.lastDataFetch}`);
-            
+            const needsUpdate = user.needsDataUpdate();           
             // Also check if user has academic progress data
             const academicProgress = await AcademicProgress.findOne({ userHash: user.userHash });
-            console.log(`User ${username} - has academic progress: ${!!academicProgress}`);
-            
-            console.log(`User ${username} - About to check needsUpdate condition: ${needsUpdate}`);
-            
+
             // Force update if user has no academic progress data, regardless of lastDataFetch
             const shouldFetchData = needsUpdate || !academicProgress;
-            console.log(`User ${username} - shouldFetchData: ${shouldFetchData} (needsUpdate: ${needsUpdate}, hasAcademicProgress: ${!!academicProgress})`);
-            
+
             if (shouldFetchData) {
-                console.log(`Starting academic scraper for user ${username}`);
                 // Fetch academic progress in background
                 scrapeAcademicProgress(username, password)
                     .then(async (progressResult) => {
-                        console.log(`Scraper result for ${username}:`, progressResult);
                         if (progressResult.success) {
                             console.log(`Processing academic progress for ${username} - ${progressResult.subjects.length} subjects found`);
                             // Update or create academic progress

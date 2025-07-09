@@ -57,7 +57,6 @@ async function authenticateWithMoodle(username, password) {
         
         // Get the current URL after login attempt
         const currentUrl = page.url();
-        console.log('URL actual:', currentUrl);
         
         // Check multiple success indicators
         const successIndicators = [

@@ -38,20 +38,11 @@ exports.chat = async (req, res) => {
 
         // Check if user is in session
         if (!req.session.user || !req.session.user._id) {
-            console.log('🤖 Assistant request failed: No user in session');
             return res.status(401).json({ error: 'No autenticado. Por favor, inicia sesión nuevamente.' });
         }
 
         const userId = req.session.user._id;
         const username = req.session.user.username;
-
-        console.log('🤖 Assistant request:', {
-            userId,
-            username,
-            question: question.substring(0, 50) + '...',
-            sessionId,
-            hasContext: !!context
-        });
 
         // Use context provided by frontend if available, otherwise build minimal context
         let assistantContext = context;
