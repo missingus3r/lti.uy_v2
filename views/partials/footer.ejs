@@ -16,7 +16,7 @@
 </footer>
 
 <!-- AI Assistant Widget -->
-<% if (typeof session !== 'undefined' && session.authenticated) { %>
+<% if (typeof session !== 'undefined' && session && session.authenticated) { %>
 <div id="assistant-overlay"></div>
 
 <div id="assistant-widget">

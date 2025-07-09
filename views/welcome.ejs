@@ -278,7 +278,7 @@
     <div class="welcome-container">
         <div class="welcome-header">
             <h1>¡Hola, <%= user.split('.')[0].charAt(0).toUpperCase() + user.split('.')[0].slice(1) %>!</h1>
-            <p>Tu progreso académico de la Licenciatura en Tecnologías de la Información</p>
+            <p>Debajo encontrarás tu progreso académico de la Licenciatura en Tecnologías de la Información</p>
         </div>
             
             <div id="progressContainer" class="progress-section">
@@ -404,7 +404,7 @@
         </div>
     </div>
 
-    <%- include('partials/footer', { marginTop: '100px', showTerms: true }) %>
+    <%- include('partials/footer', { marginTop: '100px', showTerms: true, session: session }) %>
 
     <script>
         const userHash = '<%= session.userHash %>';

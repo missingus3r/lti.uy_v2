@@ -1,4 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize AI Assistant
+    initializeAssistant();
+    
     const loginForm = document.getElementById('loginForm');
     const submitButton = document.getElementById('submitButton');
     const buttonText = document.getElementById('buttonText');
@@ -106,10 +109,6 @@ window.onclick = function(event) {
 }
 
 // AI Assistant Functionality
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAssistant();
-});
-
 function initializeAssistant() {
     const toggleBtn = document.getElementById('assistant-toggle');
     const popup = document.getElementById('assistant-popup');
@@ -127,15 +126,31 @@ function initializeAssistant() {
     const clearHistoryBtn = document.getElementById('assistant-clear-history');
     const historyList = document.getElementById('assistant-history-list');
 
+    // Debug: Check if elements exist
+    console.log('Assistant elements:', {
+        toggleBtn: !!toggleBtn,
+        popup: !!popup,
+        overlay: !!overlay,
+        closeBtn: !!closeBtn,
+        form: !!form,
+        input: !!input,
+        messages: !!messages
+    });
+
     // Only initialize if elements exist (user is authenticated)
-    if (!toggleBtn || !popup || !overlay) return;
+    if (!toggleBtn || !popup || !overlay) {
+        console.log('Assistant elements not found, user probably not authenticated');
+        return;
+    }
 
     // Current session state
     let currentSessionId = null;
 
     // Toggle popup visibility
     toggleBtn.addEventListener('click', () => {
-        const isVisible = popup.style.display === 'flex';
+        console.log('Assistant button clicked');
+        const isVisible = popup.style.display === 'flex' || window.getComputedStyle(popup).display === 'flex';
+        console.log('Current popup display:', popup.style.display, 'isVisible:', isVisible);
         if (isVisible) {
             closeAssistant();
         } else {
@@ -145,12 +160,14 @@ function initializeAssistant() {
 
     // Close popup functions
     function closeAssistant() {
+        console.log('Closing assistant');
         popup.style.display = 'none';
         overlay.style.display = 'none';
         document.body.classList.remove('modal-open');
     }
 
     function openAssistant() {
+        console.log('Opening assistant');
         popup.style.display = 'flex';
         overlay.style.display = 'block';
         document.body.classList.add('modal-open');
@@ -525,3 +542,13 @@ function parseMarkdown(text) {
         .replace(/^\- (.+)$/gm, '<li>$1</li>')
         .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
 }
+
+// Debug: Check if assistant button exists after everything is loaded
+setTimeout(() => {
+    const btn = document.getElementById('assistant-toggle');
+    console.log('Final check - Assistant button exists:', !!btn);
+    if (btn) {
+        console.log('Button is visible:', btn.offsetParent !== null);
+        console.log('Button computed style display:', window.getComputedStyle(btn).display);
+    }
+}, 1000);
