@@ -4,6 +4,7 @@
   "description": "Plataforma educativa de Uruguay para acceder a materiales de estudio",
   "start_url": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#ffffff",
   "theme_color": "#1976d2",
   "orientation": "portrait-primary",

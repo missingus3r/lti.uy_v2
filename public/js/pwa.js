@@ -92,6 +92,24 @@
                 // Clear the deferredPrompt
                 deferredPrompt = null;
             });
+        } else {
+            // Fallback for browsers without beforeinstallprompt
+            console.log('deferredPrompt no disponible, mostrando instrucciones alternativas');
+            
+            // Show manual installation instructions
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const isAndroid = /Android/i.test(navigator.userAgent);
+            
+            let instructions = '';
+            if (isIOS) {
+                instructions = 'Para instalar: toca el botón Compartir ⬆️ y selecciona "Añadir a pantalla de inicio"';
+            } else if (isAndroid) {
+                instructions = 'Para instalar: toca el menú ⋮ del navegador y selecciona "Instalar app" o "Añadir a pantalla de inicio"';
+            } else {
+                instructions = 'Para instalar: busca la opción "Instalar" en el menú del navegador';
+            }
+            
+            alert(instructions);
         }
     }
     
@@ -115,7 +133,85 @@
                 return; // Don't show if dismissed less than 7 days ago
             }
         }
+        
+        // Force show install banner for testing (uncomment to test)
+        setTimeout(() => {
+            if (!deferredPrompt && isInstallable()) {
+                showInstallPromotion();
+            }
+        }, 3000);
     });
+    
+    // Alternative detection methods for mobile browsers
+    function isInstallable() {
+        // Check if it's a mobile device
+        const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        // Check if running in standalone mode (already installed)
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                            window.navigator.standalone || 
+                            document.referrer.includes('android-app://');
+        
+        // Check if it's a supported browser
+        const isSupportedBrowser = 'serviceWorker' in navigator;
+        
+        return isMobile && !isStandalone && isSupportedBrowser;
+    }
+    
+    // Show install prompt for iOS Safari users
+    function showIOSInstallPrompt() {
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+            const banner = document.createElement('div');
+            banner.id = 'pwa-install-banner';
+            banner.className = 'pwa-install-banner ios-install';
+            banner.innerHTML = `
+                <div class="pwa-install-content">
+                    <div class="pwa-install-icon">📱</div>
+                    <div class="pwa-install-text">
+                        <h3>Instalar LTI.UY</h3>
+                        <p>Para instalar esta app: toca <strong>Compartir</strong> <span style="font-size: 16px;">⬆️</span> y luego <strong>Añadir a pantalla de inicio</strong></p>
+                    </div>
+                    <div class="pwa-install-actions">
+                        <button id="pwa-dismiss-btn" class="btn btn-secondary">Entendido</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(banner);
+            
+            // Add event listener for dismiss
+            document.getElementById('pwa-dismiss-btn').addEventListener('click', dismissInstallBanner);
+            
+            // Show banner with animation
+            setTimeout(() => {
+                banner.classList.add('show');
+            }, 100);
+        }
+    }
+    
+    // Check for install criteria after page load
+    setTimeout(() => {
+        if (isInstallable() && !deferredPrompt) {
+            // If no beforeinstallprompt event fired, show manual instructions
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                showIOSInstallPrompt();
+            } else {
+                // For Android devices without beforeinstallprompt
+                showInstallPromotion();
+            }
+        }
+    }, 2000);
+    
+    // Additional check for Android Chrome
+    if (/Android/i.test(navigator.userAgent) && /Chrome/i.test(navigator.userAgent)) {
+        // Wait a bit longer for beforeinstallprompt event
+        setTimeout(() => {
+            if (!deferredPrompt && isInstallable()) {
+                console.log('Android Chrome detected, showing install promotion');
+                showInstallPromotion();
+            }
+        }, 5000);
+    }
     
     // Handle app installed event
     window.addEventListener('appinstalled', (evt) => {

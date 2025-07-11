@@ -9,10 +9,25 @@
     padding: 20px;
     transition: bottom 0.3s ease;
     z-index: 1000;
+    border-top: 3px solid var(--utec-primary, #1976d2);
 }
 
 .pwa-install-banner.show {
     bottom: 0;
+}
+
+.pwa-install-banner.ios-install {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-top: 3px solid #667eea;
+}
+
+.pwa-install-banner.ios-install .pwa-install-text h3 {
+    color: white;
+}
+
+.pwa-install-banner.ios-install .pwa-install-text p {
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .pwa-install-content {
