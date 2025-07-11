@@ -23,18 +23,6 @@
     
     // PWA install prompt
     let deferredPrompt;
-    const installButton = document.getElementById('install-button');
-    
-    window.addEventListener('beforeinstallprompt', (e) => {
-        // Prevent Chrome 67 and earlier from automatically showing the prompt
-        e.preventDefault();
-        
-        // Stash the event so it can be triggered later
-        deferredPrompt = e;
-        
-        // Show install button or banner
-        showInstallPromotion();
-    });
     
     function showInstallPromotion() {
         // Create install banner if it doesn't exist
@@ -69,7 +57,7 @@
         }
     }
     
-    function installPWA() {
+    async function installPWA() {
         const banner = document.getElementById('pwa-install-banner');
         
         if (deferredPrompt) {
@@ -93,24 +81,124 @@
                 deferredPrompt = null;
             });
         } else {
-            // Fallback for browsers without beforeinstallprompt
-            console.log('deferredPrompt no disponible, mostrando instrucciones alternativas');
-            
-            // Show manual installation instructions
-            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-            const isAndroid = /Android/i.test(navigator.userAgent);
-            
-            let instructions = '';
-            if (isIOS) {
-                instructions = 'Para instalar: toca el botón Compartir ⬆️ y selecciona "Añadir a pantalla de inicio"';
-            } else if (isAndroid) {
-                instructions = 'Para instalar: toca el menú ⋮ del navegador y selecciona "Instalar app" o "Añadir a pantalla de inicio"';
-            } else {
-                instructions = 'Para instalar: busca la opción "Instalar" en el menú del navegador';
+            // Try modern installation methods first
+            try {
+                // Check if we can use the newer getInstalledRelatedApps API
+                if ('getInstalledRelatedApps' in navigator) {
+                    const relatedApps = await navigator.getInstalledRelatedApps();
+                    if (relatedApps.length === 0) {
+                        // App not installed, try to trigger installation
+                        await triggerInstallation();
+                        return;
+                    }
+                }
+                
+                // Try to trigger installation through other means
+                await triggerInstallation();
+                
+            } catch (error) {
+                console.log('Error al intentar instalación automática:', error);
+                showManualInstallInstructions();
             }
-            
-            alert(instructions);
         }
+    }
+    
+    async function triggerInstallation() {
+        // Check if we're on a supported platform
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        const isChrome = /Chrome/i.test(navigator.userAgent);
+        const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
+        
+        if (isAndroid && (isChrome || isSamsung)) {
+            // Try to trigger Chrome/Samsung browser installation
+            if ('BeforeInstallPromptEvent' in window) {
+                // Wait a bit and try to trigger the prompt
+                setTimeout(() => {
+                    if (!deferredPrompt) {
+                        // Try to manually trigger the installation
+                        showManualInstallInstructions();
+                    }
+                }, 1000);
+            } else {
+                showManualInstallInstructions();
+            }
+        } else if (isIOS) {
+            // iOS requires manual installation
+            showIOSInstallInstructions();
+        } else {
+            // Other browsers
+            showManualInstallInstructions();
+        }
+    }
+    
+    function showManualInstallInstructions() {
+        const banner = document.getElementById('pwa-install-banner');
+        
+        const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        
+        let instructions = '';
+        let title = 'Instalar LTI.UY';
+        
+        if (isIOS) {
+            instructions = 'Para instalar: toca el botón <strong>Compartir</strong> <span style="font-size: 18px;">⬆️</span> y selecciona <strong>"Añadir a pantalla de inicio"</strong>';
+        } else if (isAndroid) {
+            instructions = 'Para instalar: toca el menú <strong>⋮</strong> del navegador y selecciona <strong>"Instalar app"</strong> o <strong>"Añadir a pantalla de inicio"</strong>';
+        } else {
+            instructions = 'Para instalar: busca la opción <strong>"Instalar"</strong> en el menú del navegador';
+        }
+        
+        // Create a more detailed install modal
+        const modal = document.createElement('div');
+        modal.id = 'pwa-install-modal';
+        modal.className = 'pwa-install-modal';
+        modal.innerHTML = `
+            <div class="pwa-install-modal-content">
+                <div class="pwa-install-modal-header">
+                    <h3>${title}</h3>
+                    <button class="pwa-install-close" onclick="this.parentElement.parentElement.parentElement.remove()">×</button>
+                </div>
+                <div class="pwa-install-modal-body">
+                    <div class="pwa-install-steps">
+                        <div class="pwa-install-step">
+                            <div class="pwa-install-step-icon">📱</div>
+                            <div class="pwa-install-step-text">
+                                <p>${instructions}</p>
+                            </div>
+                        </div>
+                        ${isAndroid ? `
+                        <div class="pwa-install-step">
+                            <div class="pwa-install-step-icon">🔍</div>
+                            <div class="pwa-install-step-text">
+                                <p>Si no ves la opción de instalar, asegúrate de que estés usando Chrome o Samsung Internet</p>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="pwa-install-modal-footer">
+                    <button class="btn btn-secondary" onclick="this.parentElement.parentElement.parentElement.remove()">Entendido</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Hide original banner
+        if (banner) {
+            banner.classList.remove('show');
+            setTimeout(() => banner.remove(), 300);
+        }
+        
+        // Show modal with animation
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 100);
+    }
+    
+    function showIOSInstallInstructions() {
+        showManualInstallInstructions(); // Use the same modal for iOS
     }
     
     function dismissInstallBanner() {
@@ -189,8 +277,11 @@
         }
     }
     
-    // Check for install criteria after page load
-    setTimeout(() => {
+    // Enhanced install detection and timing
+    let installCheckTimeout;
+    
+    // Function to check if we should show install prompt
+    function checkInstallPrompt() {
         if (isInstallable() && !deferredPrompt) {
             // If no beforeinstallprompt event fired, show manual instructions
             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
@@ -200,21 +291,43 @@
                 showInstallPromotion();
             }
         }
+    }
+    
+    // Check for install criteria after page load
+    setTimeout(() => {
+        checkInstallPrompt();
     }, 2000);
     
-    // Additional check for Android Chrome
+    // Additional check for Android Chrome - wait longer for beforeinstallprompt
     if (/Android/i.test(navigator.userAgent) && /Chrome/i.test(navigator.userAgent)) {
-        // Wait a bit longer for beforeinstallprompt event
-        setTimeout(() => {
+        installCheckTimeout = setTimeout(() => {
             if (!deferredPrompt && isInstallable()) {
                 console.log('Android Chrome detected, showing install promotion');
                 showInstallPromotion();
             }
-        }, 5000);
+        }, 4000);
     }
     
+    // Enhanced beforeinstallprompt event handling
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Clear any pending install check
+        if (installCheckTimeout) {
+            clearTimeout(installCheckTimeout);
+        }
+        
+        // Prevent Chrome 67 and earlier from automatically showing the prompt
+        e.preventDefault();
+        
+        // Stash the event so it can be triggered later
+        deferredPrompt = e;
+        
+        // Show install button or banner immediately
+        console.log('beforeinstallprompt event fired, showing install promotion');
+        showInstallPromotion();
+    });
+    
     // Handle app installed event
-    window.addEventListener('appinstalled', (evt) => {
+    window.addEventListener('appinstalled', () => {
         console.log('PWA fue instalada');
         // Hide install banner if it exists
         const banner = document.getElementById('pwa-install-banner');

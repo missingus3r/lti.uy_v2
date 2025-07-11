@@ -2202,6 +2202,14 @@ body {
   font-weight: bold;
 }
 
+.swiper-button-next::after {
+  content: '▶' !important;
+}
+
+.swiper-button-prev::after {
+  content: '◀' !important;
+}
+
 /* Swiper pagination */
 .swiper-pagination-bullet {
   width: 12px;
@@ -2244,6 +2252,14 @@ body {
   .swiper-button-prev::after {
     font-size: 16px;
   }
+  
+  .swiper-button-next::after {
+    content: '▶' !important;
+  }
+
+  .swiper-button-prev::after {
+    content: '◀' !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2274,6 +2290,14 @@ body {
   .swiper-button-next::after,
   .swiper-button-prev::after {
     font-size: 14px;
+  }
+  
+  .swiper-button-next::after {
+    content: '▶' !important;
+  }
+
+  .swiper-button-prev::after {
+    content: '◀' !important;
   }
   
   .swiper-pagination-bullet {
