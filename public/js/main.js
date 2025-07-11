@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const username = usernameInput.value;
+            const username = usernameInput.value.toLowerCase().trim();
             const password = passwordInput.value;
             
             // Show loading state in button

@@ -103,6 +103,13 @@ app.get('/logout', (req, res) => {
     if (err) {
       console.error('Error destroying session:', err);
     }
+    // Clear the session cookie explicitly
+    res.clearCookie('connect.sid', {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
     res.redirect('/');
   });
 });

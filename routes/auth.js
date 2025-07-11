@@ -37,23 +37,26 @@ router.post('/login', async (req, res) => {
         });
     }
     
+    // Normalize username to lowercase
+    const normalizedUsername = username.toLowerCase().trim();
+    
     try {
         // Check if it's admin login
         const adminUser = process.env.ADMIN_USER;
         const adminPassword = process.env.ADMIN_PASSWORD;
         
-        if (username === adminUser && password === adminPassword) {
+        if (normalizedUsername === adminUser && password === adminPassword) {
             // Admin login successful
             req.session.authenticated = true;
             req.session.isAdmin = true;
             req.session.user = {
                 _id: 'admin',
-                username: username,
+                username: normalizedUsername,
                 userHash: 'admin'
             };
             
             // Log successful admin login
-            await logLoginAttempt(username, getRealIP(req), true, req.headers['user-agent']);
+            await logLoginAttempt(normalizedUsername, getRealIP(req), true, req.headers['user-agent']);
             
             return res.json({
                 success: true,
@@ -64,12 +67,12 @@ router.post('/login', async (req, res) => {
         }
         
         // Check login attempts for this username (regardless of user existence)
-        const loginAttempt = await LoginAttempt.findOrCreate(username, getRealIP(req), req.headers['user-agent']);
+        const loginAttempt = await LoginAttempt.findOrCreate(normalizedUsername, getRealIP(req), req.headers['user-agent']);
         
         // Check if this username is blocked
         if (loginAttempt.isCurrentlyBlocked()) {
             const remainingTime = loginAttempt.getRemainingBlockTime();
-            await logLoginAttempt(username, getRealIP(req), false, req.headers['user-agent']);
+            await logLoginAttempt(normalizedUsername, getRealIP(req), false, req.headers['user-agent']);
             
             return res.status(429).json({
                 success: false,
@@ -81,18 +84,18 @@ router.post('/login', async (req, res) => {
         }
         
         // Regular user login - call Playwright API
-        const result = await callPlaywrightAPI('/api/moodle-auth', { username, password });
+        const result = await callPlaywrightAPI('/api/moodle-auth', { username: normalizedUsername, password });
         
         if (result.success) {
             // Log successful login
-            await logLoginAttempt(username, getRealIP(req), true, req.headers['user-agent']);
+            await logLoginAttempt(normalizedUsername, getRealIP(req), true, req.headers['user-agent']);
             
             // Find or create user in User collection
-            let user = await User.findOne({ username });
+            let user = await User.findOne({ username: normalizedUsername });
             
             if (!user) {
                 // Create new user with unique hash
-                user = new User({ username });
+                user = new User({ username: normalizedUsername });
                 user.userHash = user.generateUserHash();
                 await user.save();
             }
@@ -119,10 +122,10 @@ router.post('/login', async (req, res) => {
 
             if (shouldFetchData) {
                 // Fetch academic progress in background - call Playwright API
-                callPlaywrightAPI('/api/academic-progress', { username, password })
+                callPlaywrightAPI('/api/academic-progress', { username: normalizedUsername, password })
                     .then(async (progressResult) => {
                         if (progressResult.success) {
-                            console.log(`Processing academic progress for ${username} - ${progressResult.subjects.length} subjects found`);
+                            console.log(`Processing academic progress for ${normalizedUsername} - ${progressResult.subjects.length} subjects found`);
                             // Update or create academic progress
                             let academicProgress = await AcademicProgress.findOne({ userHash: user.userHash });
                             
@@ -131,11 +134,11 @@ router.post('/login', async (req, res) => {
                                     userHash: user.userHash,
                                     subjects: progressResult.subjects
                                 });
-                                console.log(`Created new academic progress for ${username}`);
+                                console.log(`Created new academic progress for ${normalizedUsername}`);
                             } else {
                                 // Merge new data with existing data (preserve existing, update grades, add new subjects)
                                 academicProgress.mergeSubjectsData(progressResult.subjects);
-                                console.log(`Updated existing academic progress for ${username}`);
+                                console.log(`Updated existing academic progress for ${normalizedUsername}`);
                             }
                             
                             academicProgress.calculateTotalCredits();
@@ -145,21 +148,21 @@ router.post('/login', async (req, res) => {
                             user.lastDataFetch = new Date();
                             await user.save();
                             
-                            console.log(`Academic progress saved for ${username} - Total credits: ${academicProgress.totalCredits}`);
+                            console.log(`Academic progress saved for ${normalizedUsername} - Total credits: ${academicProgress.totalCredits}`);
                             
                             // Log the automatic data update
                             await logDataUpdate(
-                                username,
+                                normalizedUsername,
                                 getRealIP(req),
                                 `Actualización automática de datos académicos - Créditos: ${academicProgress.totalCredits}/${academicProgress.requiredCredits}`
                             );
                         } else {
-                            console.log(`Scraper failed for ${username}:`, progressResult.message);
+                            console.log(`Scraper failed for ${normalizedUsername}:`, progressResult.message);
                         }
                     })
                     .catch(err => console.error('Error fetching academic progress:', err));
             } else {
-                console.log(`No need to update data for user ${username} - last fetch: ${user.lastDataFetch}, has academic progress: ${!!academicProgress}`);
+                console.log(`No need to update data for user ${normalizedUsername} - last fetch: ${user.lastDataFetch}, has academic progress: ${!!academicProgress}`);
             }
             
             res.json({
@@ -170,7 +173,7 @@ router.post('/login', async (req, res) => {
             });
         } else {
             // Log failed login
-            await logLoginAttempt(username, getRealIP(req), false, req.headers['user-agent']);
+            await logLoginAttempt(normalizedUsername, getRealIP(req), false, req.headers['user-agent']);
             
             // Handle failed login attempts and blocking
             loginAttempt.incrementFailedAttempts();
@@ -181,7 +184,7 @@ router.post('/login', async (req, res) => {
                 await loginAttempt.save();
                 
                 // Log the blocking event
-                await logUserBlocked(username, getRealIP(req), 'Usuario bloqueado por 3 intentos fallidos');
+                await logUserBlocked(normalizedUsername, getRealIP(req), 'Usuario bloqueado por 3 intentos fallidos');
                 
                 return res.status(429).json({
                     success: false,
@@ -289,7 +292,7 @@ router.post('/refresh-progress', async (req, res) => {
         }
         
         // Verify password first - call Playwright API
-        const authResult = await callPlaywrightAPI('/api/moodle-auth', { username, password });
+        const authResult = await callPlaywrightAPI('/api/moodle-auth', { username: username, password });
         
         if (!authResult.success) {
             return res.status(401).json({
@@ -299,7 +302,7 @@ router.post('/refresh-progress', async (req, res) => {
         }
         
         // Fetch academic progress - call Playwright API
-        const progressResult = await callPlaywrightAPI('/api/academic-progress', { username, password });
+        const progressResult = await callPlaywrightAPI('/api/academic-progress', { username: username, password });
         
         if (progressResult.success) {
             // Update academic progress
