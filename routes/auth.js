@@ -1,12 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateWithMoodle } = require('../utils/moodleAuth');
-const { scrapeAcademicProgress } = require('../utils/academicScraper');
+const axios = require('axios');
 const User = require('../models/User');
 const LoginAttempt = require('../models/LoginAttempt');
 const AcademicProgress = require('../models/AcademicProgress');
 const CareerPlan = require('../models/CareerPlan');
 const { logLoginAttempt, logUserBlocked, logDataUpdate, getRealIP } = require('../utils/logger');
+
+// Get Playwright API URL from environment
+const PLAYWRIGHT_API_URL = process.env.PLAYWRIGHT_API_URL || 'http://localhost:8000';
+
+// Helper function to call Playwright API
+async function callPlaywrightAPI(endpoint, data) {
+    try {
+        const response = await axios.post(`${PLAYWRIGHT_API_URL}${endpoint}`, data, {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 60000 // 60 seconds timeout
+        });
+        return response.data;
+    } catch (error) {
+        console.error(`Error calling Playwright API ${endpoint}:`, error.message);
+        if (error.response) {
+            throw new Error(error.response.data.detail || 'API error');
+        }
+        throw error;
+    }
+}
 
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
@@ -61,8 +80,8 @@ router.post('/login', async (req, res) => {
             });
         }
         
-        // Regular user login
-        const result = await authenticateWithMoodle(username, password);
+        // Regular user login - call Playwright API
+        const result = await callPlaywrightAPI('/api/moodle-auth', { username, password });
         
         if (result.success) {
             // Log successful login
@@ -99,8 +118,8 @@ router.post('/login', async (req, res) => {
             const shouldFetchData = needsUpdate || !academicProgress;
 
             if (shouldFetchData) {
-                // Fetch academic progress in background
-                scrapeAcademicProgress(username, password)
+                // Fetch academic progress in background - call Playwright API
+                callPlaywrightAPI('/api/academic-progress', { username, password })
                     .then(async (progressResult) => {
                         if (progressResult.success) {
                             console.log(`Processing academic progress for ${username} - ${progressResult.subjects.length} subjects found`);
@@ -269,8 +288,8 @@ router.post('/refresh-progress', async (req, res) => {
             });
         }
         
-        // Verify password first
-        const authResult = await authenticateWithMoodle(username, password);
+        // Verify password first - call Playwright API
+        const authResult = await callPlaywrightAPI('/api/moodle-auth', { username, password });
         
         if (!authResult.success) {
             return res.status(401).json({
@@ -279,8 +298,8 @@ router.post('/refresh-progress', async (req, res) => {
             });
         }
         
-        // Fetch academic progress
-        const progressResult = await scrapeAcademicProgress(username, password);
+        // Fetch academic progress - call Playwright API
+        const progressResult = await callPlaywrightAPI('/api/academic-progress', { username, password });
         
         if (progressResult.success) {
             // Update academic progress
