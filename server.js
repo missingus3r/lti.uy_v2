@@ -13,6 +13,11 @@ connectDB().catch(err => {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy for Azure App Service
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -27,7 +32,8 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 2 // 2 hours
+    maxAge: 1000 * 60 * 60 * 2, // 2 hours
+    sameSite: 'lax'
   }
 }));
 
