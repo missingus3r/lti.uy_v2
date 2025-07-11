@@ -25,6 +25,13 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Service Worker - serve with correct MIME type and no-cache headers
+app.get('/service-worker.js', (req, res) => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.sendFile(path.join(__dirname, 'public', 'service-worker.js'));
+});
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lti-uy-secret-key-2024',
   resave: false,
@@ -40,10 +47,20 @@ app.use(session({
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const assistantRoutes = require('./routes/assistant');
+const sitemapRoutes = require('./routes/sitemap');
 const { logPageVisit } = require('./utils/logger');
+const { seoMiddleware, canonicalMiddleware, searchEngineOptimization, notFoundHandler } = require('./middleware/seo');
+
+// Apply SEO middleware first
+app.use(seoMiddleware);
+app.use(canonicalMiddleware);
+app.use(searchEngineOptimization);
 
 // Apply logging middleware to all routes
 app.use(logPageVisit);
+
+// SEO routes (before authentication routes)
+app.use(sitemapRoutes);
 
 app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
@@ -108,9 +125,7 @@ app.get('/test-error', (req, res, next) => {
 });
 
 // 404 handler - must be after all other routes
-app.use((req, res) => {
-  res.status(404).render('404');
-});
+app.use(notFoundHandler);
 
 // Error handler - must be last
 app.use((err, req, res, next) => {

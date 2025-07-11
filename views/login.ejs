@@ -15,16 +15,21 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - LTI.UY</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon_lti_v2.png">
-    <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
+    <%- include('partials/seo-meta', { 
+        seo: {
+            title: 'Iniciar Sesión - LTI.UY',
+            description: 'Inicia sesión en LTI.UY con tus credenciales de UTEC para acceder a tu información académica y recursos de la carrera.',
+            canonical: 'https://lti.uy/login'
+        }
+    }) %>
+    
+    <%- include('partials/structured-data', { path: '/login' }) %>
     
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+    <%- include('partials/breadcrumbs', { path: '/login' }) %>
     <nav class="navbar">
         <div class="container">
             <a href="/" class="navbar-brand">

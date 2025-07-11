@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - LTI.UY</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon_lti_v2.png">
-    <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
+    <%- include('partials/seo-meta', { 
+        seo: {
+            title: 'Error - LTI.UY',
+            description: 'Ha ocurrido un error en la plataforma LTI.UY. Por favor, inténtalo de nuevo más tarde.',
+            canonical: 'https://lti.uy/error'
+        }
+    }) %>
+    
+    <%- include('partials/structured-data', { path: '/error' }) %>
     
     <link rel="stylesheet" href="/css/styles.css">
     <style>
@@ -110,6 +114,7 @@
     </style>
 </head>
 <body>
+    <%- include('partials/breadcrumbs', { path: '/error' }) %>
     <div class="error-container">
         <div class="error-icon">⚠️</div>
         <h1 class="error-code"><%= error.status || 500 %></h1>

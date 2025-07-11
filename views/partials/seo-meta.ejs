@@ -1,0 +1,92 @@
+<%
+// Default SEO values
+const defaults = {
+    title: 'LTI.UY - Plataforma para estudiantes LTI de UTEC',
+    description: 'Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC. Seguimiento de progreso académico, recursos útiles y servicios.',
+    keywords: 'LTI, UTEC, Licenciatura Tecnologías Información, estudiantes Uruguay, progreso académico, Durazno, Fray Bentos, universidad tecnológica',
+    author: 'Bruno Silveira, José Faller, Mariano Collazo',
+    image: 'https://lti.uy/images/lti-uy-preview.png',
+    url: 'https://lti.uy',
+    type: 'website'
+};
+
+// Merge with page-specific values
+const seo = Object.assign({}, defaults, locals.seo || {});
+const canonicalUrl = seo.canonical || seo.url + (locals.path || '');
+%>
+
+<!-- Primary Meta Tags -->
+<title><%= seo.title %></title>
+<meta name="title" content="<%= seo.title %>">
+<meta name="description" content="<%= seo.description %>">
+<meta name="keywords" content="<%= seo.keywords %>">
+<meta name="author" content="<%= seo.author %>">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="language" content="Spanish">
+<meta name="revisit-after" content="7 days">
+<meta name="distribution" content="global">
+<meta name="rating" content="general">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="<%= canonicalUrl %>">
+
+<!-- Language alternates -->
+<link rel="alternate" hreflang="es-UY" href="<%= canonicalUrl %>">
+<link rel="alternate" hreflang="es" href="<%= canonicalUrl %>">
+<link rel="alternate" hreflang="x-default" href="<%= canonicalUrl %>">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="<%= seo.type %>">
+<meta property="og:url" content="<%= canonicalUrl %>">
+<meta property="og:title" content="<%= seo.title %>">
+<meta property="og:description" content="<%= seo.description %>">
+<meta property="og:image" content="<%= seo.image %>">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="LTI.UY - Plataforma educativa">
+<meta property="og:site_name" content="LTI.UY">
+<meta property="og:locale" content="es_UY">
+<meta property="og:locale:alternate" content="es_AR">
+
+<!-- Twitter / X -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="<%= canonicalUrl %>">
+<meta property="twitter:title" content="<%= seo.title %>">
+<meta property="twitter:description" content="<%= seo.description %>">
+<meta property="twitter:image" content="<%= seo.image %>">
+<meta property="twitter:creator" content="@ltiuy">
+<meta property="twitter:site" content="@ltiuy">
+
+<!-- Additional SEO meta tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="LTI.UY">
+<meta name="application-name" content="LTI.UY">
+<meta name="msapplication-TileColor" content="#1976d2">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<meta name="theme-color" content="#1976d2">
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Favicons -->
+<link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+<link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
+
+<!-- Preconnect to external domains -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://portal.utec.edu.uy">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+<!-- DNS Prefetch -->
+<link rel="dns-prefetch" href="//utec.edu.uy">
+<link rel="dns-prefetch" href="//portal.utec.edu.uy">
+<link rel="dns-prefetch" href="//ev1.utec.edu.uy">
+<link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+
+<!-- Sitemap -->
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">

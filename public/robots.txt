@@ -1,13 +1,77 @@
+# Robots.txt for LTI.UY
+# Allow all search engines to crawl public pages
+# Last updated: 2025
+
 User-agent: *
 Allow: /
-Allow: /login
+Allow: /news
 Allow: /terms
+Allow: /login
+Allow: /manifest.json
+Allow: /sitemap.xml
+Allow: /sitemap-index.xml
+Allow: /offline.html
+
+# Block private/authenticated areas
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+Disallow: /welcome
+Disallow: /assistant/
+
+# Allow crawling of static resources for rendering
 Allow: /css/
 Allow: /js/
 Allow: /images/
+Allow: /icons/
 
-Disallow: /api/
-Disallow: /auth/
-Disallow: /admin/
-
+# Sitemap location
 Sitemap: https://lti.uy/sitemap.xml
+
+# Crawl-delay (in seconds) - be respectful to the server
+Crawl-delay: 1
+
+# Specific rules for major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+# Block unwanted bots
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /

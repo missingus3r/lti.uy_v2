@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novedades - LTI.UY</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon_lti_v2.png">
-    <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
+    <%- include('partials/seo-meta', { 
+        seo: {
+            title: 'Novedades - LTI.UY',
+            description: 'Mantente al día con las últimas actualizaciones y novedades de la plataforma LTI.UY para estudiantes de UTEC.',
+            canonical: 'https://lti.uy/news'
+        }
+    }) %>
+    
+    <%- include('partials/structured-data', { path: '/news' }) %>
     
     <link rel="stylesheet" href="/css/styles.css">
     <style>
@@ -139,6 +143,7 @@
     </style>
 </head>
 <body>
+    <%- include('partials/breadcrumbs', { path: '/news' }) %>
     <nav class="navbar">
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <a href="/" class="navbar-brand">

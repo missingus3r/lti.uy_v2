@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sin Conexión - LTI.UY</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            color: #333;
+        }
+        
+        .offline-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 20px;
+        }
+        
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .offline-logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            background-color: #1976d2;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 32px;
+        }
+        
+        h1 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        
+        .features {
+            text-align: left;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .features h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .features ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #666;
+        }
+        
+        .features li {
+            margin: 8px 0;
+        }
+        
+        .retry-button {
+            display: inline-block;
+            background-color: #1976d2;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+        }
+        
+        .retry-button:hover {
+            background-color: #1565c0;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ff5252;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-logo">LTI</div>
+        <h1>Sin Conexión a Internet</h1>
+        <div class="offline-icon">📡</div>
+        
+        <p>
+            <span class="status-indicator"></span>
+            Actualmente estás sin conexión
+        </p>
+        
+        <p>No te preocupes, LTI.UY está diseñado para funcionar offline. Aunque algunas funciones requieren conexión, puedes:</p>
+        
+        <div class="features">
+            <h3>Mientras estás offline:</h3>
+            <ul>
+                <li>✓ Ver páginas que hayas visitado anteriormente</li>
+                <li>✓ Acceder a recursos guardados en caché</li>
+                <li>✓ Navegar por el contenido estático del sitio</li>
+            </ul>
+            
+            <h3>Cuando vuelvas a tener conexión:</h3>
+            <ul>
+                <li>✓ Se sincronizarán todos los cambios</li>
+                <li>✓ Podrás acceder a todas las funciones</li>
+                <li>✓ Se actualizará el contenido dinámico</li>
+            </ul>
+        </div>
+        
+        <button class="retry-button" onclick="window.location.reload()">
+            Intentar Nuevamente
+        </button>
+    </div>
+    
+    <script>
+        // Check connection status periodically
+        setInterval(() => {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }, 5000);
+        
+        // Listen for online event
+        window.addEventListener('online', () => {
+            window.location.reload();
+        });
+    </script>
+</body>
+</html>

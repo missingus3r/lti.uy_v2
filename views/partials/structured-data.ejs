@@ -1,0 +1,289 @@
+<%
+// Default structured data
+const defaults = {
+    url: 'https://lti.uy',
+    title: 'LTI.UY',
+    description: 'Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC',
+    image: 'https://lti.uy/images/lti-uy-preview.png'
+};
+
+// Merge with page-specific values
+const structuredData = Object.assign({}, defaults, locals.structuredData || {});
+const currentUrl = structuredData.url + (locals.path || '');
+%>
+
+<!-- Organization Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "LTI.UY",
+    "description": "Plataforma educativa para estudiantes de Licenciatura en Tecnologías de la Información de UTEC",
+    "url": "https://lti.uy",
+    "logo": "https://lti.uy/images/icon_lti_v2.png",
+    "sameAs": [
+        "https://utec.edu.uy",
+        "https://portal.utec.edu.uy"
+    ],
+    "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "url": "https://lti.uy/login"
+    },
+    "founder": [
+        {
+            "@type": "Person",
+            "name": "Bruno Silveira",
+            "jobTitle": "Licenciado en Tecnologías de la Información",
+            "alumniOf": {
+                "@type": "EducationalOrganization",
+                "name": "UTEC - Universidad Tecnológica",
+                "url": "https://utec.edu.uy"
+            }
+        },
+        {
+            "@type": "Person",
+            "name": "José Faller",
+            "jobTitle": "Licenciado en Tecnologías de la Información",
+            "alumniOf": {
+                "@type": "EducationalOrganization",
+                "name": "UTEC - Universidad Tecnológica",
+                "url": "https://utec.edu.uy"
+            }
+        },
+        {
+            "@type": "Person",
+            "name": "Mariano Collazo",
+            "jobTitle": "Licenciado en Tecnologías de la Información",
+            "alumniOf": {
+                "@type": "EducationalOrganization",
+                "name": "UTEC - Universidad Tecnológica",
+                "url": "https://utec.edu.uy"
+            }
+        }
+    ]
+}
+</script>
+
+<!-- WebSite Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "LTI.UY",
+    "description": "<%= structuredData.description %>",
+    "url": "<%= structuredData.url %>",
+    "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://lti.uy/login",
+        "name": "Acceder a la plataforma"
+    },
+    "creator": {
+        "@type": "Organization",
+        "name": "Estudiantes LTI UTEC",
+        "member": [
+            {"@type": "Person", "name": "Bruno Silveira"},
+            {"@type": "Person", "name": "José Faller"},
+            {"@type": "Person", "name": "Mariano Collazo"}
+        ]
+    },
+    "about": {
+        "@type": "EducationalOrganization",
+        "name": "UTEC - Universidad Tecnológica",
+        "url": "https://utec.edu.uy",
+        "description": "Universidad Tecnológica del Uruguay"
+    },
+    "inLanguage": "es-UY"
+}
+</script>
+
+<!-- WebApplication Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "LTI.UY",
+    "url": "https://lti.uy",
+    "description": "Plataforma web para estudiantes de Licenciatura en Tecnologías de la Información",
+    "applicationCategory": "EducationalApplication",
+    "operatingSystem": "Web Browser",
+    "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+    },
+    "featureList": [
+        "Seguimiento de progreso académico",
+        "Información de sedes UTEC",
+        "Servicios para estudiantes",
+        "Recursos educativos",
+        "Asistente virtual"
+    ],
+    "screenshot": "https://lti.uy/images/lti-uy-preview.png"
+}
+</script>
+
+<!-- Educational Organization Schema for UTEC -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    "name": "UTEC - Universidad Tecnológica",
+    "url": "https://utec.edu.uy",
+    "description": "Universidad Tecnológica del Uruguay",
+    "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "UY"
+    },
+    "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Carreras UTEC",
+        "itemListElement": [
+            {
+                "@type": "Course",
+                "name": "Licenciatura en Tecnologías de la Información",
+                "description": "Carrera de grado en tecnologías de la información",
+                "provider": {
+                    "@type": "EducationalOrganization",
+                    "name": "UTEC"
+                }
+            }
+        ]
+    }
+}
+</script>
+
+<% if (locals.path === '/') { %>
+<!-- Home Page FAQ Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+        {
+            "@type": "Question",
+            "name": "¿Cómo me matriculo a las materias?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Para matricularte a las materias, debes ingresar al portal académico de UTEC y seguir los pasos que se muestran en nuestro video tutorial disponible en la sección de preguntas frecuentes."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "¿Este sitio pertenece a la UTEC?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No, este proyecto es realizado por estudiantes recibidos de la UTEC, para estudiantes de la UTEC. Creado por los Licenciados en Tecnologías de la Información Bruno Silveira, José Faller y Mariano Collazo como proyecto final de carrera."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "¿Cuáles son los requisitos para titular?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "La solicitud de diplomas se realiza en mayo y noviembre. Requisitos: verificar créditos y materias aprobadas, certificado de inglés, cédula vigente y carné de salud."
+            }
+        },
+        {
+            "@type": "Question",
+            "name": "¿Qué requisitos necesito para la carrera LTI?",
+            "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Necesitas conexión a internet estable, hardware recomendado (16GB RAM mínimo, procesador con virtualización, 1TB almacenamiento), y cumplir con las previaturas correspondientes."
+            }
+        }
+    ]
+}
+</script>
+
+<!-- Service Schema for LTI.UY -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "LTI.UY Platform",
+    "description": "Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información",
+    "provider": {
+        "@type": "Organization",
+        "name": "LTI.UY"
+    },
+    "areaServed": {
+        "@type": "Country",
+        "name": "Uruguay"
+    },
+    "audience": {
+        "@type": "EducationalAudience",
+        "audienceType": "student"
+    },
+    "serviceType": "Educational Platform",
+    "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+    }
+}
+</script>
+<% } %>
+
+<% if (locals.path === '/news') { %>
+<!-- News Page Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Novedades - LTI.UY",
+    "url": "https://lti.uy/news",
+    "description": "Últimas novedades y actualizaciones de la plataforma LTI.UY",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "LTI.UY",
+        "url": "https://lti.uy"
+    },
+    "about": {
+        "@type": "Thing",
+        "name": "Novedades académicas UTEC"
+    }
+}
+</script>
+<% } %>
+
+<% if (locals.path === '/terms') { %>
+<!-- Terms Page Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Términos y Condiciones - LTI.UY",
+    "url": "https://lti.uy/terms",
+    "description": "Términos y condiciones de uso de la plataforma LTI.UY",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "LTI.UY",
+        "url": "https://lti.uy"
+    },
+    "genre": "Legal Document"
+}
+</script>
+<% } %>
+
+<% if (locals.path === '/login') { %>
+<!-- Login Page Schema -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Iniciar Sesión - LTI.UY",
+    "url": "https://lti.uy/login",
+    "description": "Accede a tu cuenta de estudiante en LTI.UY con tus credenciales de UTEC",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "LTI.UY",
+        "url": "https://lti.uy"
+    },
+    "potentialAction": {
+        "@type": "LoginAction",
+        "target": "https://lti.uy/auth/login"
+    }
+}
+</script>
+<% } %>

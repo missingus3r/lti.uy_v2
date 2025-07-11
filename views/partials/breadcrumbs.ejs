@@ -1,0 +1,146 @@
+<%
+// Breadcrumbs configuration
+const breadcrumbsConfig = {
+    '/': {
+        title: 'Inicio',
+        url: 'https://lti.uy/'
+    },
+    '/login': {
+        title: 'Iniciar Sesión',
+        url: 'https://lti.uy/login',
+        parent: '/'
+    },
+    '/news': {
+        title: 'Novedades',
+        url: 'https://lti.uy/news',
+        parent: '/'
+    },
+    '/terms': {
+        title: 'Términos y Condiciones',
+        url: 'https://lti.uy/terms',
+        parent: '/'
+    },
+    '/404': {
+        title: 'Página no encontrada',
+        url: 'https://lti.uy/404',
+        parent: '/'
+    },
+    '/error': {
+        title: 'Error',
+        url: 'https://lti.uy/error',
+        parent: '/'
+    }
+};
+
+// Get current page path
+const currentPath = locals.currentPath || locals.path || '/';
+const currentPage = breadcrumbsConfig[currentPath];
+
+// Build breadcrumb trail
+const breadcrumbTrail = [];
+if (currentPage) {
+    // Add home if not current page
+    if (currentPath !== '/') {
+        breadcrumbTrail.push(breadcrumbsConfig['/']);
+    }
+    
+    // Add parent pages if they exist
+    if (currentPage.parent && currentPage.parent !== '/') {
+        breadcrumbTrail.push(breadcrumbsConfig[currentPage.parent]);
+    }
+    
+    // Add current page
+    breadcrumbTrail.push(currentPage);
+}
+%>
+
+<% if (breadcrumbTrail.length > 1) { %>
+<!-- Breadcrumbs Schema Markup -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+        <% breadcrumbTrail.forEach((item, index) => { %>
+        {
+            "@type": "ListItem",
+            "position": <%= index + 1 %>,
+            "name": "<%= item.title %>",
+            "item": "<%= item.url %>"
+        }<%= index < breadcrumbTrail.length - 1 ? ',' : '' %>
+        <% }); %>
+    ]
+}
+</script>
+
+<!-- Breadcrumbs Navigation (Hidden by default, can be styled if needed) -->
+<nav aria-label="Breadcrumb" class="breadcrumbs" style="display: none;">
+    <ol class="breadcrumb-list">
+        <% breadcrumbTrail.forEach((item, index) => { %>
+        <li class="breadcrumb-item<%= index === breadcrumbTrail.length - 1 ? ' active' : '' %>">
+            <% if (index === breadcrumbTrail.length - 1) { %>
+                <span aria-current="page"><%= item.title %></span>
+            <% } else { %>
+                <a href="<%= item.url %>"><%= item.title %></a>
+            <% } %>
+        </li>
+        <% }); %>
+    </ol>
+</nav>
+<% } %>
+
+<style>
+/* Breadcrumbs styles (hidden by default, can be enabled if needed) */
+.breadcrumbs {
+    padding: 10px 0;
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.breadcrumb-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb-item:not(:last-child)::after {
+    content: '›';
+    margin: 0 8px;
+    color: #999;
+}
+
+.breadcrumb-item a {
+    color: #1976d2;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: #1565c0;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active span {
+    color: #333;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .breadcrumbs {
+        font-size: 12px;
+    }
+    
+    .breadcrumb-item:not(:last-child)::after {
+        margin: 0 4px;
+    }
+}
+</style>

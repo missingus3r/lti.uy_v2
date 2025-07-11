@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Página no encontrada | LTI.UY</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon_lti_v2.png">
-    <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
+    <%- include('partials/seo-meta', { 
+        seo: {
+            title: '404 - Página no encontrada | LTI.UY',
+            description: 'La página que buscas no existe. Vuelve a la página principal de LTI.UY para acceder a tu información académica.',
+            canonical: 'https://lti.uy/404'
+        }
+    }) %>
+    
+    <%- include('partials/structured-data', { path: '/404' }) %>
     
     <link rel="stylesheet" href="/css/styles.css">
     <style>
@@ -134,6 +138,7 @@
     </style>
 </head>
 <body>
+    <%- include('partials/breadcrumbs', { path: '/404' }) %>
     <div class="error-container">
         <div class="error-icon">🔍</div>
         <h1 class="error-code">404</h1>

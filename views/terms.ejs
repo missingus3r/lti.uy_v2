@@ -3,16 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Términos y Condiciones - LTI.UY</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon_lti_v2.png">
-    <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
+    <%- include('partials/seo-meta', { 
+        seo: {
+            title: 'Términos y Condiciones - LTI.UY',
+            description: 'Consulta los términos y condiciones de uso de la plataforma LTI.UY. Política de privacidad y protección de datos.',
+            canonical: 'https://lti.uy/terms'
+        }
+    }) %>
+    
+    <%- include('partials/structured-data', { path: '/terms' }) %>
     
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
+    <%- include('partials/breadcrumbs', { path: '/terms' }) %>
     <nav class="navbar">
         <div class="container">
             <a href="/" class="navbar-brand">

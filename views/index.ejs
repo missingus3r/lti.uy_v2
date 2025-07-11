@@ -15,123 +15,26 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Primary Meta Tags -->
-    <title>LTI.UY - Plataforma para estudiantes LTI de UTEC | Seguimiento Académico</title>
-    <meta name="title" content="LTI.UY - Plataforma para estudiantes LTI de UTEC | Seguimiento Académico">
-    <meta name="description" content="Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC. Seguimiento de progreso académico, recursos útiles y servicios para sedes de Durazno y Fray Bentos.">
-    <meta name="keywords" content="LTI, UTEC, Licenciatura Tecnologías Información, estudiantes Uruguay, progreso académico, Durazno, Fray Bentos, universidad tecnológica">
-    <meta name="robots" content="index, follow">
-    <meta name="language" content="Spanish">
-    <meta name="author" content="Bruno Silveira, José Faller, Mariano Collazo">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://lti.uy/">
-    <meta property="og:title" content="LTI.UY - Plataforma para estudiantes LTI de UTEC">
-    <meta property="og:description" content="Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC. Seguimiento de progreso académico y recursos útiles.">
-    <meta property="og:image" content="https://lti.uy/images/lti-uy-preview.png">
-    <meta property="og:site_name" content="LTI.UY">
-    <meta property="og:locale" content="es_UY">
-    
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://lti.uy/">
-    <meta property="twitter:title" content="LTI.UY - Plataforma para estudiantes LTI de UTEC">
-    <meta property="twitter:description" content="Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC.">
-    <meta property="twitter:image" content="https://lti.uy/images/lti-uy-preview.png">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://lti.uy/">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon_lti_v2.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/icon_lti_v2.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/icon_lti_v2.png">
-    <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
-    
-    <!-- Preconnect to external domains -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://portal.utec.edu.uy">
+    <%- include('partials/seo-meta', { 
+        seo: {
+            title: 'LTI.UY - Plataforma para estudiantes LTI de UTEC | Seguimiento Académico',
+            description: 'Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC. Seguimiento de progreso académico, recursos útiles y servicios para sedes de Durazno y Fray Bentos.',
+            canonical: 'https://lti.uy/'
+        }
+    }) %>
     
     <!-- CSS -->
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/pwa.css">
     
     <!-- Swiper CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
     
-    <!-- Performance optimizations -->
-    <link rel="dns-prefetch" href="//utec.edu.uy">
-    <link rel="dns-prefetch" href="//portal.utec.edu.uy">
-    <link rel="dns-prefetch" href="//ev1.utec.edu.uy">
-    
-    <!-- Sitemap -->
-    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
-    
     <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "LTI.UY",
-        "description": "Plataforma centralizada para estudiantes de Licenciatura en Tecnologías de la Información de UTEC",
-        "url": "https://lti.uy",
-        "creator": {
-            "@type": "Organization",
-            "name": "Estudiantes LTI UTEC",
-            "member": [
-                {"@type": "Person", "name": "Bruno Silveira"},
-                {"@type": "Person", "name": "José Faller"},
-                {"@type": "Person", "name": "Mariano Collazo"}
-            ]
-        },
-        "about": {
-            "@type": "EducationalOrganization",
-            "name": "UTEC - Universidad Tecnológica",
-            "url": "https://utec.edu.uy"
-        },
-        "potentialAction": {
-            "@type": "SearchAction",
-            "target": "https://lti.uy/login",
-            "name": "Acceder a la plataforma"
-        }
-    }
-    </script>
-    
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-            {
-                "@type": "Question",
-                "name": "¿Cómo me matriculo a las materias?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "Video explicativo disponible en la plataforma (matriculas.mp4)"
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "¿Este sitio pertenece a la UTEC?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "No, este proyecto es realizado por estudiantes recibidos de la UTEC, para estudiantes de la UTEC. Creado por los Licenciados en Tecnologías de la Información Bruno Silveira, José Faller y Mariano Collazo como proyecto final de carrera."
-                }
-            },
-            {
-                "@type": "Question",
-                "name": "¿Cuáles son los requisitos para titular?",
-                "acceptedAnswer": {
-                    "@type": "Answer",
-                    "text": "La solicitud de diplomas se realiza en mayo y noviembre. Requisitos: verificar créditos y materias aprobadas, certificado de inglés, cédula vigente y carné de salud."
-                }
-            }
-        ]
-    }
-    </script>
+    <%- include('partials/structured-data', { path: '/' }) %>
 </head>
 <body>
+    <%- include('partials/breadcrumbs', { path: '/' }) %>
     <nav class="navbar" role="navigation" aria-label="Navegación principal">
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <a href="/" class="navbar-brand" aria-label="Ir a inicio de LTI.UY">
@@ -1402,5 +1305,8 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
     
     <!-- Swiper JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
+    <!-- PWA JavaScript -->
+    <script src="/js/pwa.js"></script>
 </body>
 </html>
