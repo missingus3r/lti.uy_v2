@@ -46,7 +46,7 @@ const academicProgressSchema = new mongoose.Schema({
     },
     requiredCredits: {
         type: Number,
-        default: 360  // Default for LTI career
+        default: 356  // Default for LTI career
     },
     careerPlan: {
         type: mongoose.Schema.Types.ObjectId,
@@ -75,6 +75,19 @@ academicProgressSchema.methods.getRemainingCredits = function() {
 // Get progress percentage
 academicProgressSchema.methods.getProgressPercentage = function() {
     return Math.min((this.totalCredits / this.requiredCredits) * 100, 100);
+};
+
+// Update required credits from career plan
+academicProgressSchema.methods.updateRequiredCreditsFromPlan = async function() {
+    if (this.careerPlan) {
+        const CareerPlan = mongoose.model('CareerPlan');
+        const plan = await CareerPlan.findById(this.careerPlan);
+        
+        if (plan && plan.totalCredits) {
+            this.requiredCredits = plan.totalCredits;
+        }
+    }
+    return this;
 };
 
 // Get subjects by semester based on selected plan
@@ -127,12 +140,108 @@ academicProgressSchema.methods.getCurrentSemester = async function() {
     return 8; // Graduated or final semester
 };
 
+// Validate if new scraped data is of good quality compared to existing data
+academicProgressSchema.methods.validateDataQuality = function(newSubjects) {
+    const existingSubjects = this.subjects || [];
+    const existingPassedCount = existingSubjects.filter(s => s.passed).length;
+    const existingTotalCredits = existingSubjects.filter(s => s.passed).reduce((sum, s) => sum + (s.credits || 0), 0);
+    
+    const newPassedCount = newSubjects.filter(s => s.passed).length;
+    const newTotalCredits = newSubjects.filter(s => s.passed).reduce((sum, s) => sum + (s.credits || 0), 0);
+    
+    // Data quality check: new data should not have significantly fewer subjects or credits
+    const hasGoodQuality = {
+        isValid: true,
+        reason: null,
+        existingStats: {
+            passedSubjects: existingPassedCount,
+            totalCredits: existingTotalCredits,
+            totalSubjects: existingSubjects.length
+        },
+        newStats: {
+            passedSubjects: newPassedCount,
+            totalCredits: newTotalCredits,
+            totalSubjects: newSubjects.length
+        }
+    };
+    
+    // If we have existing data, validate against it
+    if (existingSubjects.length > 0) {
+        // Check if new data has significantly fewer passed subjects (more than 10% loss)
+        if (newPassedCount < existingPassedCount * 0.9) {
+            hasGoodQuality.isValid = false;
+            hasGoodQuality.reason = 'new_data_fewer_subjects';
+        }
+        
+        // Check if new data has significantly fewer credits (more than 10% loss)
+        if (newTotalCredits < existingTotalCredits * 0.9) {
+            hasGoodQuality.isValid = false;
+            hasGoodQuality.reason = 'new_data_fewer_credits';
+        }
+        
+        // Check if new data is completely empty when we have existing data
+        if (newSubjects.length === 0 && existingSubjects.length > 0) {
+            hasGoodQuality.isValid = false;
+            hasGoodQuality.reason = 'new_data_empty';
+        }
+    }
+    
+    return hasGoodQuality;
+};
+
 // Merge new subjects data with existing data (update grades, add new subjects)
 academicProgressSchema.methods.mergeSubjectsData = function(newSubjects) {
     const existingSubjects = this.subjects || [];
     const mergedSubjects = [...existingSubjects];
     
-    newSubjects.forEach(newSubject => {
+    // Extract total credits from TOTAL row before filtering
+    const totalRow = newSubjects.find(subject => 
+        subject.name && subject.name.trim().toUpperCase() === 'TOTAL'
+    );
+    
+    let earnedCredits = 0;
+    if (totalRow && totalRow.name) {
+        // Parse TOTAL row format: "TOTAL    356,00    12,00    344,00    0,00"
+        // Extract second number (earned credits)
+        const numbers = totalRow.name.match(/\d+[,.]?\d*/g);
+        if (numbers && numbers.length >= 2) {
+            earnedCredits = parseFloat(numbers[1].replace(',', '.'));
+            if (!isNaN(earnedCredits)) {
+                this.totalCredits = earnedCredits;
+            }
+        }
+    }
+    
+    // Add or update TOTAL record in subjects array for dashboard access
+    const existingTotalIndex = mergedSubjects.findIndex(subject => 
+        subject.name && subject.name.trim().toUpperCase() === 'TOTAL'
+    );
+    
+    const totalSubject = {
+        name: 'TOTAL',
+        credits: 0,
+        type: earnedCredits.toString(),
+        convocatoria: '',
+        grade: '',
+        passed: false
+    };
+    
+    if (existingTotalIndex !== -1) {
+        // Update existing TOTAL record
+        mergedSubjects[existingTotalIndex] = totalSubject;
+    } else {
+        // Add new TOTAL record
+        mergedSubjects.push(totalSubject);
+    }
+    
+    // Filter out summary rows - don't process them as subjects (but keep TOTAL for dashboard)
+    const summaryRowTypes = ['OBLIGATORIA', 'OPTATIVA', 'LIBRE CONFIGURACIÓN', 'PROYECTO', 'PRÁCTICAS PROFESIONALES'];
+    const actualSubjects = newSubjects.filter(subject => 
+        !summaryRowTypes.includes(subject.name && subject.name.trim().toUpperCase()) &&
+        subject.name && subject.name.trim().toUpperCase() !== 'TOTAL'
+    );
+    
+    actualSubjects.forEach(newSubject => {
         // Find existing subject by name (case-insensitive)
         const existingIndex = mergedSubjects.findIndex(existing => 
             existing.name.toLowerCase().trim() === newSubject.name.toLowerCase().trim()

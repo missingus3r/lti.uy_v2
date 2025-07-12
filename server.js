@@ -30,6 +30,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'lti-uy-secret-key-2024',
   resave: false,
   saveUninitialized: false,
+  name: 'lti.session',
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
@@ -44,6 +45,7 @@ const assistantRoutes = require('./routes/assistant');
 const sitemapRoutes = require('./routes/sitemap');
 const { logPageVisit } = require('./utils/logger');
 const { seoMiddleware, canonicalMiddleware, searchEngineOptimization, notFoundHandler } = require('./middleware/seo');
+const { checkMaintenanceForLogin } = require('./middleware/maintenanceMode');
 
 // Apply SEO middleware first
 app.use(seoMiddleware);
@@ -64,7 +66,7 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
-app.get('/login', (req, res) => {
+app.get('/login', checkMaintenanceForLogin, (req, res) => {
   if (req.session.authenticated) {
     if (req.session.isAdmin) {
       return res.redirect('/admin/dashboard');
@@ -74,13 +76,37 @@ app.get('/login', (req, res) => {
   res.render('login');
 });
 
-app.get('/welcome', (req, res) => {
-  if (!req.session.authenticated) {
+app.get('/welcome', async (req, res) => {
+  if (!req.session || !req.session.authenticated || !req.session.user || !req.session.userHash) {
     return res.redirect('/login');
   }
+  
+  // Get user data quality warning info and academic progress
+  let dataQualityWarning = false;
+  let dataQualityReason = null;
+  let academicProgress = null;
+  
+  try {
+    const User = require('./models/User');
+    const AcademicProgress = require('./models/AcademicProgress');
+    
+    const user = await User.findOne({ userHash: req.session.userHash });
+    if (user) {
+      dataQualityWarning = user.dataQualityWarning || false;
+      dataQualityReason = user.dataQualityReason || null;
+    }
+    
+    academicProgress = await AcademicProgress.findOne({ userHash: req.session.userHash });
+  } catch (error) {
+    console.error('Error getting user data quality info:', error);
+  }
+  
   res.render('welcome', { 
     user: req.session.user.username,
-    session: req.session 
+    session: req.session,
+    dataQualityWarning: dataQualityWarning,
+    dataQualityReason: dataQualityReason,
+    academicProgress: academicProgress
   });
 });
 
@@ -93,17 +119,48 @@ app.get('/news', (req, res) => {
 });
 
 app.get('/logout', (req, res) => {
+  console.log('Logout requested for user:', req.session.user ? req.session.user.username : 'unknown');
+  
+  // Clear all session data first
+  req.session.authenticated = false;
+  req.session.isAdmin = false;
+  req.session.user = null;
+  req.session.userHash = null;
+  
   req.session.destroy((err) => {
     if (err) {
       console.error('Error destroying session:', err);
+      return res.status(500).send('Error al cerrar sesión');
     }
-    // Clear the session cookie explicitly
+    
+    // Clear all possible session cookies
+    res.clearCookie('lti.session', {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    });
+    
+    // Also clear default session cookie name just in case
     res.clearCookie('connect.sid', {
       path: '/',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax'
     });
+    
+    // Clear any other potential cookies
+    res.clearCookie('session', { path: '/' });
+    res.clearCookie('sess', { path: '/' });
+    
+    // Set cache-control headers to prevent caching
+    res.set({
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    });
+    
+    console.log('Session destroyed and all cookies cleared');
     res.redirect('/');
   });
 });
@@ -116,6 +173,26 @@ app.get('/health', (req, res) => {
     service: 'LTI.UY',
     version: '1.0.0'
   });
+});
+
+// Maintenance check endpoint
+app.get('/api/maintenance-check', async (req, res) => {
+  try {
+    const MaintenanceConfig = require('./models/MaintenanceConfig');
+    const config = await MaintenanceConfig.getStatus();
+    
+    res.json({
+      success: true,
+      maintenance: config.isMaintenanceMode,
+      message: config.maintenanceMessage
+    });
+  } catch (error) {
+    console.error('Error checking maintenance status:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al verificar estado de mantenimiento'
+    });
+  }
 });
 
 // Test error page (remove in production)

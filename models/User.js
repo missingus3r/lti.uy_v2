@@ -25,6 +25,14 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    dataQualityWarning: {
+        type: Boolean,
+        default: false
+    },
+    dataQualityReason: {
+        type: String,
+        default: null
+    },
     selectedPlan: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'CareerPlan',
@@ -53,6 +61,22 @@ userSchema.methods.needsDataUpdate = function() {
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     
     return this.lastDataFetch < oneDayAgo;
+};
+
+// Check if data needs to be fetched (every 5 days)
+userSchema.methods.needsDataUpdateFiveDays = function() {   
+    if (!this.lastDataFetch) {
+        console.log(`  - Returning true (no previous fetch)`);
+        return true;
+    }
+    
+    const fiveDaysAgo = new Date();
+    fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+    
+    const needsUpdate = this.lastDataFetch < fiveDaysAgo;
+    console.log(`  - Last fetch: ${this.lastDataFetch}, Five days ago: ${fiveDaysAgo}, Needs update: ${needsUpdate}`);
+    
+    return needsUpdate;
 };
 
 // Check if manual refresh is allowed (max 2 times per 24h)

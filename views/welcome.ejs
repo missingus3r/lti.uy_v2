@@ -238,7 +238,25 @@
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 40px 20px;
+            background-color: var(--bg-light);
+            border-radius: 10px;
+            margin: 30px 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--utec-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         
         .modal {
@@ -461,11 +479,43 @@
         <div class="welcome-header">
             <h1>¡Hola, <%= user.split('.')[0].charAt(0).toUpperCase() + user.split('.')[0].slice(1) %>!</h1>
             <p>Debajo encontrarás tu progreso académico de la Licenciatura en Tecnologías de la Información</p>
+            
+            <% if (dataQualityWarning) { %>
+            <div class="data-quality-warning" style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0; color: #856404;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 20px; margin-right: 10px;">⚠️</span>
+                    <strong>Datos de calidad cuestionable detectados</strong>
+                </div>
+                <p style="margin: 5px 0;">
+                    Los últimos datos obtenidos del sistema académico tienen menor información que los almacenados previamente. 
+                    Se están mostrando los datos más completos disponibles.
+                </p>
+                <p style="margin: 5px 0; font-size: 14px;">
+                    <strong>Recomendación:</strong> Realiza una actualización manual usando el botón "Actualizar Ahora" 
+                    para intentar obtener datos más recientes y completos.
+                </p>
+                <% if (dataQualityReason) { %>
+                <p style="margin: 5px 0; font-size: 12px; color: #6c757d;">
+                    Motivo: 
+                    <% if (dataQualityReason === 'new_data_fewer_subjects') { %>
+                        Los nuevos datos contienen menos materias aprobadas
+                    <% } else if (dataQualityReason === 'new_data_fewer_credits') { %>
+                        Los nuevos datos contienen menos créditos
+                    <% } else if (dataQualityReason === 'new_data_empty') { %>
+                        Los nuevos datos están vacíos
+                    <% } else { %>
+                        <%= dataQualityReason %>
+                    <% } %>
+                </p>
+                <% } %>
+            </div>
+            <% } %>
         </div>
             
             <div id="progressContainer" class="progress-section">
-                <div class="loading" id="loadingIndicator">
-                    <p>Cargando progreso académico...</p>
+                <div class="loading" id="loadingIndicator" style="display: block;">
+                    <h3 style="color: var(--utec-primary); margin-bottom: 15px;">Cargando tu progreso académico</h3>
+                    <p style="color: var(--text-light); margin-bottom: 20px;">Obteniendo datos del portal académico...</p>
                     <div class="spinner"></div>
                 </div>
                 
@@ -505,15 +555,17 @@
                     
                     <div class="progress-stats">
                         <div class="progress-stat">
-                            <div class="stat-number" id="totalCredits">0</div>
+                            <div class="stat-number" id="totalCredits"><%= academicProgress ? academicProgress.totalCredits : 0 %></div>
                             <div class="stat-label">Créditos obtenidos</div>
+                            <div class="stat-label">Si aparece en 0, refresca la página</div>
+                            <div class="stat-label">Si te faltan créditos, dale a "Actualizar ahora"</div>
                         </div>
                         <div class="progress-stat">
-                            <div class="stat-number" id="requiredCredits">360</div>
+                            <div class="stat-number" id="requiredCredits"><%= academicProgress ? academicProgress.requiredCredits : 354 %></div>
                             <div class="stat-label">Créditos requeridos</div>
                         </div>
                         <div class="progress-stat">
-                            <div class="stat-number" id="remainingCredits">360</div>
+                            <div class="stat-number" id="remainingCredits"><%= academicProgress ? academicProgress.getRemainingCredits() : 354 %></div>
                             <div class="stat-label">Créditos restantes</div>
                         </div>
                     </div>
@@ -523,7 +575,7 @@
                     </p>
                 </div>
                 
-                <div id="subjectsSection" style="background-color: var(--bg-light); padding: 30px; border-radius: 10px; margin-top: 30px;">
+                <div id="subjectsSection" style="display: none; background-color: var(--bg-light); padding: 30px; border-radius: 10px; margin-top: 30px;">
                     <h3 style="color: var(--utec-dark); margin-bottom: 20px;">
                         Asignaturas del Expediente
                     </h3>
@@ -656,10 +708,16 @@
         let currentCareerPlan = null;
         let studentProgress = null;
         
-        // Load academic progress on page load
+        // Load academic progress immediately when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlans();
+            loadAcademicProgress(true);
+        });
+        
+        // Also load on window.onload as backup
         window.onload = function() {
             loadPlans();
-            loadAcademicProgress();
+            loadAcademicProgress(true);
         };
         
         function loadPlans() {
@@ -713,13 +771,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Update current career plan
+                    // Update current career plan and reload academic progress to get updated required credits
                     fetch('/auth/career-plans')
                         .then(response => response.json())
                         .then(planData => {
                             if (planData.success && planData.plans) {
                                 currentCareerPlan = planData.plans.find(plan => plan._id === planId);
-                                displayProgress(studentProgress); // Refresh display with new plan
+                                // Reload academic progress to get updated required credits
+                                loadAcademicProgress(true);
                             }
                         });
                 } else {
@@ -732,15 +791,20 @@
             });
         }
         
-        function loadAcademicProgress() {
+        function loadAcademicProgress(isInitialLoad = false) {
             document.getElementById('loadingIndicator').style.display = 'block';
             document.getElementById('progressContent').style.display = 'none';
+            document.getElementById('subjectsSection').style.display = 'none';
             document.getElementById('noDataMessage').style.display = 'none';
             
-            fetch(`/auth/academic-progress/${userHash}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('loadingIndicator').style.display = 'none';
+            // Add a small delay for initial loads when data might be coming from DB
+            const fetchDelay = isInitialLoad ? 500 : 0;
+            
+            setTimeout(() => {
+                fetch(`/auth/academic-progress/${userHash}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('loadingIndicator').style.display = 'none';
                     
                     if (data.success && data.data) {
                         studentProgress = data.data;
@@ -748,6 +812,14 @@
                         updateRefreshButton(data.canManualRefresh, data.manualRefreshesLeft);
                         document.getElementById('progressContent').style.display = 'block';
                         document.getElementById('subjectsSection').style.display = 'block';
+                        
+                        // Check if there's a data quality warning and the warning banner is not already shown
+                        if (data.dataQualityWarning && !document.querySelector('.data-quality-warning')) {
+                            // Reload page to show the warning banner
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
+                        }
                     } else {
                         studentProgress = null;
                         displayProgress(null);
@@ -820,6 +892,7 @@
                     document.getElementById('loadingIndicator').style.display = 'none';
                     document.getElementById('noDataMessage').style.display = 'block';
                 });
+            }, fetchDelay);
         }
         
         // Function to normalize subject names for comparison
@@ -851,6 +924,9 @@
                 .replace(/\bdiseño\s+de\s+experiencia\s+usuario\b/g, 'diseño de experiencia')
                 // Normalize "Ética, Tecnología y Sociedad" variations
                 .replace(/\bética,?\s+tecnología\s+y\s+sociedad\b/g, 'ética tecnología y sociedad')
+                // Normalize "Análisis y requerimientos" vs "Análisis de Requerimientos"
+                .replace(/\banálisis\s+y\s+requerimientos\b/g, 'análisis de requerimientos')
+                .replace(/\banálisis\s+de\s+requerimientos\b/g, 'análisis de requerimientos')
                 // Normalize multiple spaces
                 .replace(/\s+/g, ' ')
                 .trim();
@@ -1007,6 +1083,12 @@
             if (data && data.subjects) {
                 // Find subjects that are not in the career plan and exclude English subjects
                 const additionalSubjects = data.subjects.filter(studentSubject => {
+                    // Exclude summary rows
+                    const summaryRowTypes = ['OBLIGATORIA', 'OPTATIVA', 'LIBRE CONFIGURACIÓN', 'PROYECTO', 'PRÁCTICAS PROFESIONALES', 'TOTAL'];
+                    if (summaryRowTypes.includes(studentSubject.name && studentSubject.name.trim().toUpperCase())) {
+                        return false;
+                    }
+                    
                     // Exclude if it matches a subject in the career plan
                     if (matchedSubjects.some(matched => matched.name === studentSubject.name)) {
                         return false;
@@ -1049,25 +1131,14 @@
                 additionalContainer.style.display = 'none';
             }
             
-            // Calculate and update credits info including additional subjects
-            // Calculate total credits from all approved subjects
-            let totalCreditsFromData = 0;
-            if (data && data.subjects) {
-                totalCreditsFromData = data.subjects.reduce((sum, subject) => {
-                    // Only count subjects that have credits (are approved)
-                    return sum + (subject.credits || 0);
-                }, 0);
-            }
+            // Use credits data directly from database instead of calculating in frontend
+            const totalCreditsFromDB = data && data.totalCredits !== undefined ? data.totalCredits : 0;
+            const requiredCreditsFromDB = data && data.requiredCredits !== undefined ? data.requiredCredits : 354;
+            const remainingCreditsFromDB = data && data.remainingCredits !== undefined ? data.remainingCredits : Math.max(0, requiredCreditsFromDB - totalCreditsFromDB);
             
-            // Update credits info - totalCreditsFromData now includes ALL subjects
-            const totalCreditsWithAdditional = totalCreditsFromData;
-            // Fixed required credits for LTI career
-            const requiredCredits = 360;
-            
-            // Calculate progress percentage, capping at 100%
-            if (requiredCredits > 0) {
-                progressPercentage = Math.min(100, (totalCreditsWithAdditional / requiredCredits) * 100);
-            }
+            // Use progress percentage from database instead of calculating in frontend
+            const progressPercentageFromDB = data && data.progressPercentage !== undefined ? data.progressPercentage : 0;
+            progressPercentage = Math.min(100, progressPercentageFromDB);
             
             // Update progress bar
             progressFill.style.width = progressPercentage + '%';
@@ -1081,10 +1152,10 @@
                 congratulationsMessage.style.display = 'none';
             }
             
-            // Update credits display
-            document.getElementById('totalCredits').textContent = totalCreditsWithAdditional;
-            document.getElementById('requiredCredits').textContent = requiredCredits;
-            document.getElementById('remainingCredits').textContent = Math.max(0, requiredCredits - totalCreditsWithAdditional);
+            // Update credits display using values from database
+            document.getElementById('totalCredits').textContent = totalCreditsFromDB;
+            document.getElementById('requiredCredits').textContent = requiredCreditsFromDB;
+            document.getElementById('remainingCredits').textContent = remainingCreditsFromDB;
             
             // Update last update time
             if (data && data.lastUpdated) {
@@ -1230,6 +1301,20 @@
                     updateFetchDataButton(data.manualRefreshesLeft > 0, data.manualRefreshesLeft);
                     document.getElementById('progressContent').style.display = 'block';
                     document.getElementById('noDataMessage').style.display = 'none';
+                    
+                    // Check if there was a data quality warning
+                    if (data.warning && data.dataQuality) {
+                        // Show data quality warning
+                        alert(`⚠️ ${data.message}\n\nDatos existentes: ${data.dataQuality.existingStats.passedSubjects} materias, ${data.dataQuality.existingStats.totalCredits} créditos\nDatos obtenidos: ${data.dataQuality.newStats.passedSubjects} materias, ${data.dataQuality.newStats.totalCredits} créditos\n\nSe mantuvieron los datos con mayor información.`);
+                        
+                        // Reload page to show the warning banner
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        // Success message for good quality data
+                        alert('✅ Progreso académico actualizado correctamente');
+                    }
                     
                     // Restore the original no data message in case it's needed later
                     document.getElementById('noDataMessage').innerHTML = `

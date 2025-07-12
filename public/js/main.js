@@ -376,17 +376,18 @@ function initializeAssistant() {
 
         // Try to get data from global variables if they exist (from welcome.ejs)
         if (typeof studentProgress !== 'undefined' && studentProgress) {
-            // Get the real total credits from DOM (includes both tables)
-            const totalCreditsEl = document.getElementById('totalCredits');
-            const realTotalCredits = totalCreditsEl ? parseInt(totalCreditsEl.textContent) || 0 : studentProgress.totalCredits || 0;
-            const requiredCredits = studentProgress.requiredCredits || 360;
+            // Use credits data directly from database instead of calculating from DOM
+            const realTotalCredits = studentProgress.totalCredits || 0;
+            const requiredCredits = studentProgress.requiredCredits;
             
-            // Calculate progress percentage (max 100%)
-            const rawPercentage = (realTotalCredits / requiredCredits) * 100;
-            const progressPercentage = Math.min(100, Math.round(rawPercentage));
+            // Use progress percentage from database instead of calculating
+            const progressPercentage = Math.min(100, Math.round(studentProgress.progressPercentage || 0));
             
-            // Separate subjects by type
-            const planSubjects = studentProgress.subjects || [];
+            // Separate subjects by type - filter out summary rows
+            const summaryRowTypes = ['OBLIGATORIA', 'OPTATIVA', 'LIBRE CONFIGURACIÓN', 'PROYECTO', 'PRÁCTICAS PROFESIONALES', 'TOTAL'];
+            const planSubjects = (studentProgress.subjects || []).filter(subject => 
+                !summaryRowTypes.includes(subject.name && subject.name.trim().toUpperCase())
+            );
             const additionalSubjects = [];
             
             // Get additional subjects from the additional subjects table
@@ -487,10 +488,11 @@ function initializeAssistant() {
         const progressBar = document.getElementById('progressBar');
         
         if (totalCreditsEl && requiredCreditsEl && remainingCreditsEl && !context.academicProgress) {
-            // If no academic progress from global var, try to construct from DOM
+            // FALLBACK ONLY: If no academic progress from global var, read from DOM
+            // Note: These values should already be set from database in welcome.ejs
             const totalCredits = parseInt(totalCreditsEl.textContent) || 0;
-            const requiredCredits = parseInt(requiredCreditsEl.textContent) || 360;
-            const remainingCredits = parseInt(remainingCreditsEl.textContent) || 360;
+            const requiredCredits = parseInt(requiredCreditsEl.textContent);
+            const remainingCredits = parseInt(remainingCreditsEl.textContent);
             const rawPercentage = progressBar ? parseInt(progressBar.style.width) || 0 : 0;
             const progressPercentage = Math.min(100, rawPercentage);
             

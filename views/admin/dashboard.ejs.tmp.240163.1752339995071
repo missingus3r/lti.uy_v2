@@ -222,11 +222,6 @@
             color: #2e7d32;
         }
         
-        .type-maintenanceToggle {
-            background-color: #fff3e0;
-            color: #f57c00;
-        }
-        
         .pagination {
             display: flex;
             justify-content: center;
@@ -685,7 +680,6 @@
                                 <option value="dataUpdate">Actualizaciones de Datos</option>
                                 <option value="userBlocked">Usuarios Bloqueados</option>
                                 <option value="userUnblocked">Usuarios Desbloqueados</option>
-                                <option value="maintenanceToggle">Cambios de Mantenimiento</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -765,54 +759,6 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Maintenance Tab -->
-            <div id="maintenance-tab" class="tab-content">
-                <div class="logs-table">
-                    <h2>Modo de Mantenimiento</h2>
-                    <div style="padding: 2rem;">
-                        <div id="maintenance-status" style="margin-bottom: 2rem;">
-                            <div class="loading">Cargando estado de mantenimiento...</div>
-                        </div>
-                        
-                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #3498db;">
-                            <h3 style="margin-bottom: 1rem; color: #2c3e50;">Configurar Modo de Mantenimiento</h3>
-                            <p style="margin-bottom: 1.5rem; color: #666; line-height: 1.5;">
-                                El modo de mantenimiento deshabilitará el acceso al login para usuarios regulares. 
-                                El landing page seguirá funcionando normalmente, y los administradores podrán seguir accediendo.
-                            </p>
-                            
-                            <div style="margin-bottom: 1.5rem;">
-                                <label for="maintenance-message" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
-                                    Mensaje personalizado:
-                                </label>
-                                <textarea 
-                                    id="maintenance-message" 
-                                    rows="3" 
-                                    style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-family: inherit; resize: vertical;"
-                                    placeholder="Escribe el mensaje que verán los usuarios cuando intenten acceder al login...">El sistema se encuentra en mantenimiento. Por favor, intenta más tarde.</textarea>
-                            </div>
-                            
-                            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                                <button 
-                                    id="enable-maintenance-btn" 
-                                    onclick="toggleMaintenanceMode(true)" 
-                                    class="btn" 
-                                    style="background-color: #f39c12; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">
-                                    🔧 Activar Mantenimiento
-                                </button>
-                                <button 
-                                    id="disable-maintenance-btn" 
-                                    onclick="toggleMaintenanceMode(false)" 
-                                    class="btn" 
-                                    style="background-color: #27ae60; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">
-                                    ✅ Desactivar Mantenimiento
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
     
@@ -843,10 +789,6 @@
                 document.querySelectorAll('.tab-btn')[3].classList.add('active');
                 document.getElementById('chats-tab').classList.add('active');
                 loadChats();
-            } else if (tab === 'maintenance') {
-                document.querySelectorAll('.tab-btn')[4].classList.add('active');
-                document.getElementById('maintenance-tab').classList.add('active');
-                loadMaintenanceStatus();
             }
         }
         
@@ -906,8 +848,7 @@
                     'loginFailure': 'Login Fallido',
                     'dataUpdate': 'Actualización',
                     'userBlocked': 'Usuario Bloqueado',
-                    'userUnblocked': 'Usuario Desbloqueado',
-                    'maintenanceToggle': 'Mantenimiento'
+                    'userUnblocked': 'Usuario Desbloqueado'
                 }[log.type] || log.type;
                 
                 html += `
@@ -960,9 +901,7 @@
             
             users.forEach(user => {
                 const lastUpdate = user.lastDataFetch ? new Date(user.lastDataFetch).toLocaleDateString('es-UY') : 'Nunca';
-                const obtainedCredits = user.academicProgress?.obtainedCredits || 0;
-                const requiredCredits = user.academicProgress?.requiredCredits || 0;
-                const credits = `${obtainedCredits}/${requiredCredits}`;
+                const credits = user.academicProgress ? `${user.academicProgress.totalCredits}/${user.academicProgress.requiredCredits}` : '0/0';
                 const progressLastUpdate = user.academicProgress?.lastUpdated ? 
                     new Date(user.academicProgress.lastUpdated).toLocaleDateString('es-UY') : 'Sin datos';
                 
@@ -1282,123 +1221,6 @@
             } catch (error) {
                 console.error('Error clearing logs:', error);
                 alert('Error al limpiar logs');
-            }
-        }
-        
-        // Load maintenance status
-        async function loadMaintenanceStatus() {
-            try {
-                const response = await fetch('/admin/api/maintenance-status');
-                const data = await response.json();
-                
-                if (data.success) {
-                    renderMaintenanceStatus(data.config);
-                } else {
-                    document.getElementById('maintenance-status').innerHTML = '<div class="empty-state">Error al cargar estado de mantenimiento</div>';
-                }
-            } catch (error) {
-                console.error('Error loading maintenance status:', error);
-                document.getElementById('maintenance-status').innerHTML = '<div class="empty-state">Error al cargar estado de mantenimiento</div>';
-            }
-        }
-        
-        // Render maintenance status
-        function renderMaintenanceStatus(config) {
-            const statusColor = config.isMaintenanceMode ? '#e74c3c' : '#27ae60';
-            const statusText = config.isMaintenanceMode ? 'ACTIVADO' : 'DESACTIVADO';
-            const statusIcon = config.isMaintenanceMode ? '🔧' : '✅';
-            
-            let enabledInfo = '';
-            if (config.isMaintenanceMode && config.enabledAt) {
-                const enabledDate = new Date(config.enabledAt).toLocaleString('es-UY');
-                enabledInfo = `
-                    <p style="margin: 0.5rem 0; color: #666;">
-                        <strong>Activado:</strong> ${enabledDate}
-                        ${config.enabledBy ? ` por ${config.enabledBy}` : ''}
-                    </p>
-                `;
-            }
-            
-            const html = `
-                <div style="background: white; padding: 1.5rem; border-radius: 8px; border-left: 4px solid ${statusColor};">
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                        <span style="font-size: 1.5rem;">${statusIcon}</span>
-                        <div>
-                            <h3 style="margin: 0; color: #2c3e50;">Estado del Sistema</h3>
-                            <p style="margin: 0; color: ${statusColor}; font-weight: 600; font-size: 1.1rem;">
-                                Modo Mantenimiento: ${statusText}
-                            </p>
-                        </div>
-                    </div>
-                    ${enabledInfo}
-                    ${config.isMaintenanceMode ? `
-                        <div style="background: #fff3cd; padding: 1rem; border-radius: 4px; border-left: 3px solid #ffc107; margin-top: 1rem;">
-                            <strong>Mensaje actual:</strong><br>
-                            <em>${config.maintenanceMessage}</em>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-            
-            document.getElementById('maintenance-status').innerHTML = html;
-            
-            // Update textarea with current message
-            document.getElementById('maintenance-message').value = config.maintenanceMessage;
-            
-            // Update button states
-            const enableBtn = document.getElementById('enable-maintenance-btn');
-            const disableBtn = document.getElementById('disable-maintenance-btn');
-            
-            if (config.isMaintenanceMode) {
-                enableBtn.style.opacity = '0.5';
-                enableBtn.disabled = true;
-                disableBtn.style.opacity = '1';
-                disableBtn.disabled = false;
-            } else {
-                enableBtn.style.opacity = '1';
-                enableBtn.disabled = false;
-                disableBtn.style.opacity = '0.5';
-                disableBtn.disabled = true;
-            }
-        }
-        
-        // Toggle maintenance mode
-        async function toggleMaintenanceMode(enabled) {
-            const message = document.getElementById('maintenance-message').value.trim();
-            
-            if (enabled && !message) {
-                alert('Por favor, ingresa un mensaje de mantenimiento');
-                return;
-            }
-            
-            const action = enabled ? 'activar' : 'desactivar';
-            if (!confirm(`¿Estás seguro de que quieres ${action} el modo de mantenimiento?`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/admin/api/toggle-maintenance', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        enabled: enabled,
-                        message: message
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    alert(data.message);
-                    loadMaintenanceStatus(); // Reload status
-                } else {
-                    alert(`Error: ${data.message}`);
-                }
-            } catch (error) {
-                console.error('Error toggling maintenance mode:', error);
-                alert('Error al cambiar modo de mantenimiento');
             }
         }
         

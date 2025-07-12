@@ -5,6 +5,7 @@ const Log = require('../models/Log');
 const User = require('../models/User');
 const LoginAttempt = require('../models/LoginAttempt');
 const AcademicProgress = require('../models/AcademicProgress');
+const MaintenanceConfig = require('../models/MaintenanceConfig');
 const assistantController = require('../controllers/assistantController');
 
 // Admin dashboard
@@ -13,12 +14,13 @@ router.get('/dashboard', isAdmin, async (req, res) => {
         // Get statistics
         const stats = await Log.getStats();
         
-        // Get total users, academic progress records, and security stats
-        const [totalUsers, totalProgress, blockedUsers, usersWithFailedAttempts] = await Promise.all([
+        // Get total users, academic progress records, security stats, and maintenance status
+        const [totalUsers, totalProgress, blockedUsers, usersWithFailedAttempts, maintenanceConfig] = await Promise.all([
             User.countDocuments(),
             AcademicProgress.countDocuments(),
             LoginAttempt.countDocuments({ isBlocked: true }),
-            LoginAttempt.countDocuments({ failedAttempts: { $gt: 0 } })
+            LoginAttempt.countDocuments({ failedAttempts: { $gt: 0 } }),
+            MaintenanceConfig.getStatus()
         ]);
         
         res.render('admin/dashboard', {
@@ -29,7 +31,8 @@ router.get('/dashboard', isAdmin, async (req, res) => {
                 totalProgress,
                 blockedUsers,
                 usersWithFailedAttempts
-            }
+            },
+            maintenanceConfig
         });
     } catch (error) {
         console.error('Error loading admin dashboard:', error);
@@ -65,11 +68,49 @@ router.get('/api/logs', isAdmin, async (req, res) => {
 
 // Admin logout
 router.get('/logout', (req, res) => {
+    console.log('Admin logout requested for user:', req.session.user ? req.session.user.username : 'unknown');
+    
+    // Clear all session data first
+    req.session.authenticated = false;
+    req.session.isAdmin = false;
+    req.session.user = null;
+    req.session.userHash = null;
+    
     req.session.destroy((err) => {
         if (err) {
-            console.error('Error destroying session:', err);
+            console.error('Error destroying admin session:', err);
+            return res.status(500).send('Error al cerrar sesión');
         }
-        res.redirect('/login');
+        
+        // Clear all possible session cookies
+        res.clearCookie('lti.session', {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+        
+        // Also clear default session cookie name just in case
+        res.clearCookie('connect.sid', {
+            path: '/',
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax'
+        });
+        
+        // Clear any other potential cookies
+        res.clearCookie('session', { path: '/' });
+        res.clearCookie('sess', { path: '/' });
+        
+        // Set cache-control headers to prevent caching
+        res.set({
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        });
+        
+        console.log('Admin session destroyed and all cookies cleared');
+        res.redirect('/');
     });
 });
 
@@ -84,12 +125,44 @@ router.get('/api/users', isAdmin, async (req, res) => {
         // Get academic progress for each user
         const usersWithProgress = await Promise.all(users.map(async (user) => {
             const progress = await AcademicProgress.findOne({ userHash: user.userHash })
-                .select('totalCredits requiredCredits lastUpdated')
+                .select('totalCredits requiredCredits lastUpdated subjects')
                 .lean();
+            
+            let obtainedCredits = 0;
+            
+            if (progress && progress.subjects) {
+                console.log(`Checking subjects for user ${user.username}, total subjects: ${progress.subjects.length}`);
+                
+                // Find the TOTAL record in subjects where name is TOTAL and get the type field
+                const totalRecord = progress.subjects.find(subject => 
+                    subject.name && subject.name.trim().toUpperCase() === 'TOTAL'
+                );
+                
+                console.log(`TOTAL record found:`, totalRecord);
+                
+                if (totalRecord && totalRecord.type) {
+                    // Parse the type field to get the obtained credits
+                    const credits = parseFloat(totalRecord.type.replace(',', '.'));
+                    console.log("CREDITOS TOTALES: "+credits);
+                    if (!isNaN(credits)) {
+                        obtainedCredits = credits;
+                    }
+                } else {
+                    console.log(`No TOTAL record found or no type field for user ${user.username}`);
+                }
+            }
+            
+            // If no TOTAL record found, fall back to totalCredits field
+            if (obtainedCredits === 0 && progress && progress.totalCredits) {
+                obtainedCredits = progress.totalCredits;
+            }
             
             return {
                 ...user,
-                academicProgress: progress
+                academicProgress: progress ? {
+                    ...progress,
+                    obtainedCredits
+                } : null
             };
         }));
         
@@ -233,6 +306,54 @@ router.post('/api/clear-logs', isAdmin, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al limpiar logs'
+        });
+    }
+});
+
+// Get maintenance status
+router.get('/api/maintenance-status', isAdmin, async (req, res) => {
+    try {
+        const config = await MaintenanceConfig.getStatus();
+        res.json({
+            success: true,
+            config
+        });
+    } catch (error) {
+        console.error('Error fetching maintenance status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener estado de mantenimiento'
+        });
+    }
+});
+
+// Toggle maintenance mode
+router.post('/api/toggle-maintenance', isAdmin, async (req, res) => {
+    try {
+        const { enabled, message } = req.body;
+        const adminUser = req.session.user ? req.session.user.username : 'admin';
+        
+        const config = await MaintenanceConfig.toggleMaintenanceMode(enabled, message, adminUser);
+        
+        // Log the maintenance mode change
+        const { logMaintenanceToggle, getRealIP } = require('../utils/logger');
+        await logMaintenanceToggle(
+            adminUser,
+            getRealIP(req),
+            enabled,
+            message
+        );
+        
+        res.json({
+            success: true,
+            message: enabled ? 'Modo mantenimiento activado' : 'Modo mantenimiento desactivado',
+            config
+        });
+    } catch (error) {
+        console.error('Error toggling maintenance mode:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al cambiar modo de mantenimiento'
         });
     }
 });

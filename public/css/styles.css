@@ -1173,6 +1173,16 @@ body {
     background-color: var(--utec-primary);
   }
   
+  /* Disable sticky column on mobile */
+  @media (max-width: 768px) {
+    .subjects-table th:first-child,
+    .subjects-table td:first-child {
+      position: static;
+      left: auto;
+      z-index: auto;
+    }
+  }
+  
   .refresh-info {
     padding: 12px;
   }

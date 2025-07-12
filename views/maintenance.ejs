@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/images/icon_lti_v2.png">
+    <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Sistema de seguimiento académico en mantenimiento - LTI.UY">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .maintenance-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            margin: 20px;
+        }
+        
+        .maintenance-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+        
+        .maintenance-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+        
+        .maintenance-subtitle {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+        
+        .maintenance-message {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            color: #856404;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .maintenance-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.25rem 0;
+        }
+        
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .info-value {
+            color: #7f8c8d;
+        }
+        
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .admin-notice {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 2rem;
+            color: #1976d2;
+            font-size: 0.9rem;
+        }
+        
+        .admin-link {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .admin-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .maintenance-container {
+                padding: 2rem;
+                margin: 10px;
+            }
+            
+            .maintenance-title {
+                font-size: 2rem;
+            }
+            
+            .maintenance-subtitle {
+                font-size: 1rem;
+            }
+            
+            .maintenance-icon {
+                font-size: 3rem;
+            }
+            
+            .info-item {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .maintenance-container {
+                padding: 1.5rem;
+                width: 95%;
+            }
+            
+            .maintenance-title {
+                font-size: 1.75rem;
+            }
+            
+            .maintenance-message {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+            
+            .maintenance-info {
+                padding: 1rem;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .maintenance-container {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        /* Loading animation for the icon */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+        
+        .maintenance-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="maintenance-container">
+        <div class="maintenance-icon">🔧</div>
+        
+        <h1 class="maintenance-title">Sistema en Mantenimiento</h1>
+        <p class="maintenance-subtitle">Estamos trabajando para mejorar tu experiencia</p>
+        
+        <div class="maintenance-message">
+            <%= message %>
+        </div>
+        
+        <div class="maintenance-info">
+            <div class="info-item">
+                <span class="info-label">Estado:</span>
+                <span class="info-value">Mantenimiento Programado</span>
+            </div>
+            <% if (config.enabledAt) { %>
+            <div class="info-item">
+                <span class="info-label">Inicio:</span>
+                <span class="info-value"><%= new Date(config.enabledAt).toLocaleString('es-UY') %></span>
+            </div>
+            <% } %>
+            <div class="info-item">
+                <span class="info-label">Duración estimada:</span>
+                <span class="info-value">Variable según el tipo de mantenimiento</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Servicios afectados:</span>
+                <span class="info-value">Acceso de usuarios (login)</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Servicios disponibles:</span>
+                <span class="info-value">Página principal y contenido público</span>
+            </div>
+        </div>
+        
+        <a href="/" class="back-button">Volver al Inicio</a>
+        
+        <div class="admin-notice">
+            <strong>¿Eres administrador?</strong><br>
+            Si necesitas acceder al panel de administración, puedes hacerlo desde 
+            <a href="/admin" class="admin-link">aquí</a>.
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh para verificar si el mantenimiento ha terminado
+        function checkMaintenanceStatus() {
+            fetch('/api/maintenance-check', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && !data.maintenance) {
+                    // El mantenimiento ha terminado, recargar la página
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                // Si hay error, no hacer nada, solo continuar
+                console.debug('Maintenance check failed:', error);
+            });
+        }
+        
+        // Verificar cada 30 segundos si el mantenimiento ha terminado
+        setInterval(checkMaintenanceStatus, 30000);
+        
+        // También verificar cuando la ventana recupera el foco
+        window.addEventListener('focus', checkMaintenanceStatus);
+    </script>
+</body>
+</html>

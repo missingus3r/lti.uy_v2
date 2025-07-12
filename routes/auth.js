@@ -6,6 +6,7 @@ const LoginAttempt = require('../models/LoginAttempt');
 const AcademicProgress = require('../models/AcademicProgress');
 const CareerPlan = require('../models/CareerPlan');
 const { logLoginAttempt, logUserBlocked, logDataUpdate, getRealIP } = require('../utils/logger');
+const { checkMaintenanceForLogin } = require('../middleware/maintenanceMode');
 
 // Get Playwright API URL from environment
 const PLAYWRIGHT_API_URL = process.env.PLAYWRIGHT_API_URL || 'http://localhost:8000';
@@ -27,7 +28,7 @@ async function callPlaywrightAPI(endpoint, data) {
     }
 }
 
-router.post('/login', async (req, res) => {
+router.post('/login', checkMaintenanceForLogin, async (req, res) => {
     const { username, password } = req.body;
     
     if (!username || !password) {
@@ -112,8 +113,8 @@ router.post('/login', async (req, res) => {
             };
             req.session.userHash = user.userHash;
             
-            // Check if we need to fetch academic data
-            const needsUpdate = user.needsDataUpdate();           
+            // Check if we need to fetch academic data (5-day interval)
+            const needsUpdate = user.needsDataUpdateFiveDays();           
             // Also check if user has academic progress data
             const academicProgress = await AcademicProgress.findOne({ userHash: user.userHash });
 
@@ -135,26 +136,56 @@ router.post('/login', async (req, res) => {
                                     subjects: progressResult.subjects
                                 });
                                 console.log(`Created new academic progress for ${normalizedUsername}`);
-                            } else {
-                                // Merge new data with existing data (preserve existing, update grades, add new subjects)
                                 academicProgress.mergeSubjectsData(progressResult.subjects);
-                                console.log(`Updated existing academic progress for ${normalizedUsername}`);
+                                academicProgress.calculateTotalCredits();
+                                await academicProgress.updateRequiredCreditsFromPlan();
+                                await academicProgress.save();
+                                
+                                // Update user's last fetch date
+                                user.lastDataFetch = new Date();
+                                user.dataQualityWarning = false;
+                                user.dataQualityReason = null;
+                                await user.save();
+                            } else {
+                                // Validate data quality before merging
+                                const dataQuality = academicProgress.validateDataQuality(progressResult.subjects);
+                                
+                                if (dataQuality.isValid) {
+                                    // Good quality data - merge it
+                                    academicProgress.mergeSubjectsData(progressResult.subjects);
+                                    academicProgress.calculateTotalCredits();
+                                    await academicProgress.updateRequiredCreditsFromPlan();
+                                    await academicProgress.save();
+                                    
+                                    // Update user's last fetch date and clear any warning
+                                    user.lastDataFetch = new Date();
+                                    user.dataQualityWarning = false;
+                                    user.dataQualityReason = null;
+                                    await user.save();
+                                    
+                                    console.log(`Updated existing academic progress for ${normalizedUsername} - Quality OK`);
+                                } else {
+                                    // Poor quality data - keep existing data and set warning
+                                    console.log(`Poor quality data detected for ${normalizedUsername}:`, dataQuality.reason);
+                                    console.log(`Existing: ${dataQuality.existingStats.passedSubjects} subjects, ${dataQuality.existingStats.totalCredits} credits`);
+                                    console.log(`New: ${dataQuality.newStats.passedSubjects} subjects, ${dataQuality.newStats.totalCredits} credits`);
+                                    
+                                    // Set warning flag but don't update lastDataFetch (will retry next time)
+                                    user.dataQualityWarning = true;
+                                    user.dataQualityReason = dataQuality.reason;
+                                    await user.save();
+                                    
+                                    console.log(`Keeping existing data for ${normalizedUsername} due to quality issues`);
+                                }
                             }
                             
-                            academicProgress.calculateTotalCredits();
-                            await academicProgress.save();
-                            
-                            // Update user's last fetch date
-                            user.lastDataFetch = new Date();
-                            await user.save();
-                            
-                            console.log(`Academic progress saved for ${normalizedUsername} - Total credits: ${academicProgress.totalCredits}`);
+                            console.log(`Academic progress processed for ${normalizedUsername} - Total credits: ${academicProgress.totalCredits}`);
                             
                             // Log the automatic data update
                             await logDataUpdate(
                                 normalizedUsername,
                                 getRealIP(req),
-                                `Actualización automática de datos académicos - Créditos: ${academicProgress.totalCredits}/${academicProgress.requiredCredits}`
+                                `Actualización automática de datos académicos - Créditos: ${academicProgress.totalCredits}/${academicProgress.requiredCredits}${user.dataQualityWarning ? ' (calidad de datos cuestionable)' : ''}`
                             );
                         } else {
                             console.log(`Scraper failed for ${normalizedUsername}:`, progressResult.message);
@@ -162,7 +193,7 @@ router.post('/login', async (req, res) => {
                     })
                     .catch(err => console.error('Error fetching academic progress:', err));
             } else {
-                console.log(`No need to update data for user ${normalizedUsername} - last fetch: ${user.lastDataFetch}, has academic progress: ${!!academicProgress}`);
+                console.log(`No need to update data for user ${normalizedUsername} - last fetch: ${user.lastDataFetch}, has academic progress: ${!!academicProgress}, 5-day check: ${needsUpdate}`);
             }
             
             res.json({
@@ -218,7 +249,7 @@ router.get('/academic-progress/:userHash', async (req, res) => {
     try {
         const { userHash } = req.params;
         
-        if (!req.session.authenticated || req.session.userHash !== userHash) {
+        if (!req.session || !req.session.authenticated || !req.session.user || !req.session.userHash || req.session.userHash !== userHash) {
             return res.status(401).json({
                 success: false,
                 message: 'No autorizado'
@@ -248,9 +279,11 @@ router.get('/academic-progress/:userHash', async (req, res) => {
                 progressPercentage: academicProgress.getProgressPercentage(),
                 lastUpdated: academicProgress.lastUpdated
             },
-            needsUpdate: user.needsDataUpdate(),
+            needsUpdate: user.needsDataUpdateFiveDays(),
             canManualRefresh: user.canManualRefresh(),
-            manualRefreshesLeft: 2 - user.manualRefreshCount
+            manualRefreshesLeft: 2 - user.manualRefreshCount,
+            dataQualityWarning: user.dataQualityWarning || false,
+            dataQualityReason: user.dataQualityReason || null
         });
     } catch (error) {
         console.error('Error getting academic progress:', error);
@@ -268,7 +301,7 @@ router.post('/refresh-progress', async (req, res) => {
         const userHash = req.session.userHash;
         const username = req.session.user.username;
         
-        if (!req.session.authenticated || !userHash || !username) {
+        if (!req.session || !req.session.authenticated || !req.session.user || !userHash || !username) {
             return res.status(401).json({
                 success: false,
                 message: 'No autorizado'
@@ -313,24 +346,64 @@ router.post('/refresh-progress', async (req, res) => {
                     userHash: userHash,
                     subjects: progressResult.subjects
                 });
-            } else {
-                // Merge new data with existing data (preserve existing, update grades, add new subjects)
                 academicProgress.mergeSubjectsData(progressResult.subjects);
+                academicProgress.calculateTotalCredits();
+                await academicProgress.updateRequiredCreditsFromPlan();
+                await academicProgress.save();
+                
+                // Update user
+                user.lastDataFetch = new Date();
+                user.incrementManualRefresh();
+                user.dataQualityWarning = false;
+                user.dataQualityReason = null;
+                await user.save();
+            } else {
+                // Validate data quality before merging
+                const dataQuality = academicProgress.validateDataQuality(progressResult.subjects);
+                
+                if (dataQuality.isValid) {
+                    // Good quality data - merge it
+                    academicProgress.mergeSubjectsData(progressResult.subjects);
+                    academicProgress.calculateTotalCredits();
+                    await academicProgress.updateRequiredCreditsFromPlan();
+                    await academicProgress.save();
+                    
+                    // Update user
+                    user.lastDataFetch = new Date();
+                    user.incrementManualRefresh();
+                    user.dataQualityWarning = false;
+                    user.dataQualityReason = null;
+                    await user.save();
+                } else {
+                    // Poor quality data - keep existing data but still count the manual refresh
+                    user.incrementManualRefresh();
+                    user.dataQualityWarning = true;
+                    user.dataQualityReason = dataQuality.reason;
+                    await user.save();
+                    
+                    return res.json({
+                        success: true,
+                        message: 'Los datos obtenidos tienen menor calidad que los existentes. Se mantuvieron los datos actuales.',
+                        warning: true,
+                        dataQuality: dataQuality,
+                        data: {
+                            subjects: academicProgress.subjects,
+                            totalCredits: academicProgress.totalCredits,
+                            requiredCredits: academicProgress.requiredCredits,
+                            remainingCredits: academicProgress.getRemainingCredits(),
+                            progressPercentage: academicProgress.getProgressPercentage(),
+                            lastUpdated: academicProgress.lastUpdated
+                        },
+                        manualRefreshesLeft: 2 - user.manualRefreshCount
+                    });
+                }
             }
-            
-            academicProgress.calculateTotalCredits();
-            await academicProgress.save();
-            
-            // Update user
-            user.lastDataFetch = new Date();
-            user.incrementManualRefresh();
-            await user.save();
             
             // Log the data update
             await logDataUpdate(
                 username,
                 getRealIP(req),
-                `Actualización manual de datos académicos - Créditos: ${academicProgress.totalCredits}/${academicProgress.requiredCredits}`
+                `Actualización manual de datos académicos - Créditos: ${academicProgress.totalCredits}/${academicProgress.requiredCredits}${user.dataQualityWarning ? ' (calidad de datos cuestionable)' : ''}`
             );
             
             res.json({
@@ -364,7 +437,7 @@ router.post('/refresh-progress', async (req, res) => {
 // Get career plans
 router.get('/career-plans', async (req, res) => {
     try {
-        if (!req.session.authenticated) {
+        if (!req.session || !req.session.authenticated || !req.session.user) {
             return res.status(401).json({
                 success: false,
                 message: 'No autorizado'
@@ -394,7 +467,7 @@ router.post('/change-plan', async (req, res) => {
         const { planId } = req.body;
         const userHash = req.session.userHash;
         
-        if (!req.session.authenticated || !userHash) {
+        if (!req.session || !req.session.authenticated || !req.session.user || !userHash) {
             return res.status(401).json({
                 success: false,
                 message: 'No autorizado'

@@ -91,11 +91,26 @@ const logUserUnblocked = async (username, ip, details) => {
   }
 };
 
+// Función para loguear cambios en modo mantenimiento
+const logMaintenanceToggle = async (username, ip, enabled, message) => {
+  try {
+    await Log.create({
+      type: 'maintenanceToggle',
+      ip: ip,
+      username: username,
+      details: `Modo mantenimiento ${enabled ? 'activado' : 'desactivado'}${message ? ` - Mensaje: ${message}` : ''}`
+    });
+  } catch (error) {
+    console.error('Error logging maintenance toggle:', error);
+  }
+};
+
 module.exports = {
   logPageVisit,
   logLoginAttempt,
   logDataUpdate,
   logUserBlocked,
   logUserUnblocked,
+  logMaintenanceToggle,
   getRealIP
 };
