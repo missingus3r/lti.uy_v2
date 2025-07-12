@@ -7,10 +7,8 @@ Allow: /
 Allow: /news
 Allow: /terms
 Allow: /login
-Allow: /manifest.json
 Allow: /sitemap.xml
 Allow: /sitemap-index.xml
-Allow: /offline.html
 
 # Block private/authenticated areas
 Disallow: /admin/
@@ -23,7 +21,6 @@ Disallow: /assistant/
 Allow: /css/
 Allow: /js/
 Allow: /images/
-Allow: /icons/
 
 # Sitemap location
 Sitemap: https://lti.uy/sitemap.xml

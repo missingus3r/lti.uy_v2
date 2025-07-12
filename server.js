@@ -25,12 +25,6 @@ app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Service Worker - serve with correct MIME type and no-cache headers
-app.get('/service-worker.js', (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.sendFile(path.join(__dirname, 'public', 'service-worker.js'));
-});
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'lti-uy-secret-key-2024',
