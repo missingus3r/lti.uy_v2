@@ -45,6 +45,7 @@ logSchema.statics.getLogs = async function(filters = {}, page = 1, limit = 50) {
   
   if (filters.type) query.type = filters.type;
   if (filters.username) query.username = new RegExp(filters.username, 'i');
+  if (filters.ip) query.ip = new RegExp(filters.ip, 'i');
   if (filters.startDate || filters.endDate) {
     query.timestamp = {};
     if (filters.startDate) query.timestamp.$gte = new Date(filters.startDate);

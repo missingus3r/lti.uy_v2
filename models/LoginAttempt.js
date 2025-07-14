@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const SecurityConfig = require('./SecurityConfig');
 
 const loginAttemptSchema = new mongoose.Schema({
     username: {
@@ -60,12 +61,13 @@ loginAttemptSchema.methods.resetFailedAttempts = function() {
     this.lastAttemptAt = new Date();
 };
 
-// Método para bloquear usuario por 15 minutos
-loginAttemptSchema.methods.blockUser = function() {
+// Método para bloquear usuario según configuración
+loginAttemptSchema.methods.blockUser = async function() {
+    const securityConfig = await SecurityConfig.getConfig();
     const now = new Date();
     this.isBlocked = true;
     this.blockedAt = now;
-    this.blockExpiresAt = new Date(now.getTime() + 15 * 60 * 1000); // 15 minutos
+    this.blockExpiresAt = new Date(now.getTime() + securityConfig.blockDurationMinutes * 60 * 1000);
     this.lastAttemptAt = now;
 };
 
@@ -107,8 +109,9 @@ loginAttemptSchema.methods.getRemainingBlockTime = function() {
 };
 
 // Método para obtener intentos restantes antes del bloqueo
-loginAttemptSchema.methods.getRemainingAttempts = function() {
-    return Math.max(0, 3 - this.failedAttempts);
+loginAttemptSchema.methods.getRemainingAttempts = async function() {
+    const securityConfig = await SecurityConfig.getConfig();
+    return Math.max(0, securityConfig.maxLoginAttempts - this.failedAttempts);
 };
 
 // Método estático para encontrar o crear un registro de intento de login

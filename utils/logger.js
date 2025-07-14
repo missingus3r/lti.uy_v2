@@ -105,6 +105,20 @@ const logMaintenanceToggle = async (username, ip, enabled, message) => {
   }
 };
 
+// Función para loguear cambios en configuración de seguridad
+const logSecurityConfigChange = async (username, ip, details) => {
+  try {
+    await Log.create({
+      type: 'securityConfigChange',
+      ip: ip,
+      username: username,
+      details: `Configuración de seguridad actualizada - ${details}`
+    });
+  } catch (error) {
+    console.error('Error logging security config change:', error);
+  }
+};
+
 module.exports = {
   logPageVisit,
   logLoginAttempt,
@@ -112,5 +126,6 @@ module.exports = {
   logUserBlocked,
   logUserUnblocked,
   logMaintenanceToggle,
+  logSecurityConfigChange,
   getRealIP
 };

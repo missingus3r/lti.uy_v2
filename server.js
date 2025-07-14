@@ -81,6 +81,11 @@ app.get('/welcome', async (req, res) => {
     return res.redirect('/login');
   }
   
+  // Set cache headers to prevent caching
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
   // Get user data quality warning info and academic progress
   let dataQualityWarning = false;
   let dataQualityReason = null;

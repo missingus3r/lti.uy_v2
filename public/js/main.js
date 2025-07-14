@@ -43,10 +43,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (data.success) {
                     // Keep loading state while redirecting
+                    // Use timestamp to force browser to bypass cache
+                    const timestamp = new Date().getTime();
                     if (data.isAdmin) {
-                        window.location.href = data.redirectUrl || '/admin/dashboard';
+                        // Force reload to clear any cached state
+                        window.location.href = `${data.redirectUrl || '/admin/dashboard'}?_t=${timestamp}`;
                     } else {
-                        window.location.href = '/welcome';
+                        // Force reload to clear any cached state
+                        window.location.href = `/welcome?_t=${timestamp}`;
                     }
                 } else {
                     // Reset button state

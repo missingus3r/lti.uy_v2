@@ -5,6 +5,7 @@ const User = require('../models/User');
 const LoginAttempt = require('../models/LoginAttempt');
 const AcademicProgress = require('../models/AcademicProgress');
 const CareerPlan = require('../models/CareerPlan');
+const SecurityConfig = require('../models/SecurityConfig');
 const { logLoginAttempt, logUserBlocked, logDataUpdate, getRealIP } = require('../utils/logger');
 const { checkMaintenanceForLogin } = require('../middleware/maintenanceMode');
 
@@ -209,24 +210,27 @@ router.post('/login', checkMaintenanceForLogin, async (req, res) => {
             // Handle failed login attempts and blocking
             loginAttempt.incrementFailedAttempts();
             
-            // Check if user should be blocked (3 failed attempts)
-            if (loginAttempt.failedAttempts >= 3) {
-                loginAttempt.blockUser();
+            // Get security config for max attempts
+            const securityConfig = await SecurityConfig.getConfig();
+            
+            // Check if user should be blocked
+            if (loginAttempt.failedAttempts >= securityConfig.maxLoginAttempts) {
+                await loginAttempt.blockUser();
                 await loginAttempt.save();
                 
                 // Log the blocking event
-                await logUserBlocked(normalizedUsername, getRealIP(req), 'Usuario bloqueado por 3 intentos fallidos');
+                await logUserBlocked(normalizedUsername, getRealIP(req), `Usuario bloqueado por ${securityConfig.maxLoginAttempts} intentos fallidos`);
                 
                 return res.status(429).json({
                     success: false,
-                    message: 'Demasiados intentos fallidos. Tu cuenta ha sido bloqueada por 15 minutos.',
+                    message: `Demasiados intentos fallidos. Tu cuenta ha sido bloqueada por ${securityConfig.blockDurationMinutes} minutos.`,
                     isBlocked: true,
-                    remainingTime: 15,
+                    remainingTime: securityConfig.blockDurationMinutes,
                     blockExpiresAt: loginAttempt.blockExpiresAt
                 });
             } else {
                 await loginAttempt.save();
-                const remainingAttempts = loginAttempt.getRemainingAttempts();
+                const remainingAttempts = await loginAttempt.getRemainingAttempts();
                 
                 return res.status(401).json({
                     success: false,

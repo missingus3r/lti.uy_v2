@@ -614,6 +614,26 @@
             font-size: 0.75rem;
             color: #999;
         }
+        
+        .delete-log-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .delete-log-btn:hover {
+            background-color: #c0392b;
+        }
+        
+        .delete-log-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -667,6 +687,7 @@
                 <button class="tab-btn" onclick="switchTab('security')">Seguridad</button>
                 <button class="tab-btn" onclick="switchTab('chats')">Historial de Chats</button>
                 <button class="tab-btn" onclick="switchTab('maintenance')">Mantenimiento</button>
+                <button class="tab-btn" onclick="switchTab('config')">Configuración</button>
             </div>
             
             <!-- Logs Tab -->
@@ -691,6 +712,10 @@
                         <div class="filter-group">
                             <label for="username-filter">Usuario</label>
                             <input type="text" id="username-filter" placeholder="Buscar por usuario...">
+                        </div>
+                        <div class="filter-group">
+                            <label for="ip-filter">IP</label>
+                            <input type="text" id="ip-filter" placeholder="Buscar por IP...">
                         </div>
                         <div class="filter-group">
                             <label for="start-date">Fecha Inicio</label>
@@ -813,6 +838,64 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Configuration Tab -->
+            <div id="config-tab" class="tab-content">
+                <div class="logs-table">
+                    <h2>Configuración del Sistema</h2>
+                    <div style="padding: 2rem;">
+                        <!-- Security Configuration -->
+                        <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; border-left: 4px solid #e74c3c; margin-bottom: 2rem;">
+                            <h3 style="margin-bottom: 1rem; color: #2c3e50;">🔐 Configuración de Seguridad</h3>
+                            <p style="margin-bottom: 1.5rem; color: #666; line-height: 1.5;">
+                                Configura los parámetros de seguridad para los intentos de login y bloqueos de usuarios.
+                            </p>
+                            
+                            <div id="security-config-status" style="margin-bottom: 1.5rem;">
+                                <div class="loading">Cargando configuración de seguridad...</div>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                                <div>
+                                    <label for="max-login-attempts" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                                        Máximo de intentos de login:
+                                    </label>
+                                    <input 
+                                        type="number" 
+                                        id="max-login-attempts" 
+                                        min="1" 
+                                        max="10" 
+                                        value="3"
+                                        style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+                                    <small style="color: #666;">Entre 1 y 10 intentos</small>
+                                </div>
+                                
+                                <div>
+                                    <label for="block-duration" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                                        Duración del bloqueo (minutos):
+                                    </label>
+                                    <input 
+                                        type="number" 
+                                        id="block-duration" 
+                                        min="5" 
+                                        max="1440" 
+                                        value="15"
+                                        style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+                                    <small style="color: #666;">Entre 5 minutos y 24 horas</small>
+                                </div>
+                            </div>
+                            
+                            <button 
+                                id="save-security-config-btn" 
+                                onclick="saveSecurityConfig()" 
+                                class="btn" 
+                                style="background-color: #e74c3c; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer;">
+                                💾 Guardar Configuración
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -847,6 +930,10 @@
                 document.querySelectorAll('.tab-btn')[4].classList.add('active');
                 document.getElementById('maintenance-tab').classList.add('active');
                 loadMaintenanceStatus();
+            } else if (tab === 'config') {
+                document.querySelectorAll('.tab-btn')[5].classList.add('active');
+                document.getElementById('config-tab').classList.add('active');
+                loadSecurityConfig();
             }
         }
         
@@ -856,6 +943,7 @@
                 const filters = {
                     type: document.getElementById('type-filter').value,
                     username: document.getElementById('username-filter').value,
+                    ip: document.getElementById('ip-filter').value,
                     startDate: document.getElementById('start-date').value,
                     endDate: document.getElementById('end-date').value,
                     page: page
@@ -882,15 +970,33 @@
                 return;
             }
             
+            const selectedCount = getSelectedLogIds().length;
+            
             let html = `
+                <div class="bulk-actions" style="margin-bottom: 1rem; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <label style="margin-right: 1rem;">
+                            <input type="checkbox" id="select-all-logs" onchange="toggleAllLogs(this.checked)" style="margin-right: 0.5rem;">
+                            Seleccionar todos
+                        </label>
+                        <span id="selected-count">${selectedCount} seleccionados</span>
+                    </div>
+                    <button id="delete-selected-btn" class="btn" style="background-color: #dc3545; color: white; opacity: ${selectedCount > 0 ? '1' : '0.5'};" onclick="deleteSelectedLogs()" ${selectedCount === 0 ? 'disabled' : ''}>
+                        Eliminar Seleccionados (${selectedCount})
+                    </button>
+                </div>
                 <table>
                     <thead>
                         <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="header-select-all" onchange="toggleAllLogs(this.checked)" style="margin: 0;">
+                            </th>
                             <th>Fecha y Hora</th>
                             <th>Tipo</th>
                             <th>Usuario</th>
                             <th>IP</th>
                             <th>Detalles</th>
+                            <th style="width: 80px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -911,12 +1017,23 @@
                 }[log.type] || log.type;
                 
                 html += `
-                    <tr>
+                    <tr id="log-row-${log._id}">
+                        <td>
+                            <input type="checkbox" class="log-checkbox" value="${log._id}" onchange="updateSelectedCount()" style="margin: 0;">
+                        </td>
                         <td>${formattedDate}</td>
                         <td><span class="type-badge ${typeBadgeClass}">${typeText}</span></td>
                         <td>${log.username || '-'}</td>
                         <td>${log.ip}</td>
                         <td>${log.details || log.page || '-'}</td>
+                        <td>
+                            <button 
+                                onclick="deleteLog('${log._id}')" 
+                                class="delete-log-btn" 
+                                title="Eliminar este log">
+                                🗑️
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
@@ -989,6 +1106,94 @@
         // Apply filters
         function applyFilters() {
             loadLogs(1);
+        }
+        
+        // Get selected log IDs
+        function getSelectedLogIds() {
+            const checkboxes = document.querySelectorAll('.log-checkbox:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+        
+        // Update selected count display
+        function updateSelectedCount() {
+            const selectedIds = getSelectedLogIds();
+            const count = selectedIds.length;
+            
+            // Update count display
+            const countElement = document.getElementById('selected-count');
+            if (countElement) {
+                countElement.textContent = `${count} seleccionados`;
+            }
+            
+            // Update button state
+            const deleteBtn = document.getElementById('delete-selected-btn');
+            if (deleteBtn) {
+                deleteBtn.disabled = count === 0;
+                deleteBtn.style.opacity = count > 0 ? '1' : '0.5';
+                deleteBtn.textContent = `Eliminar Seleccionados (${count})`;
+            }
+            
+            // Update header checkbox
+            const headerCheckbox = document.getElementById('header-select-all');
+            const selectAllCheckbox = document.getElementById('select-all-logs');
+            const allCheckboxes = document.querySelectorAll('.log-checkbox');
+            
+            if (headerCheckbox && selectAllCheckbox && allCheckboxes.length > 0) {
+                const allChecked = count === allCheckboxes.length;
+                const someChecked = count > 0;
+                
+                headerCheckbox.checked = allChecked;
+                headerCheckbox.indeterminate = someChecked && !allChecked;
+                
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = someChecked && !allChecked;
+            }
+        }
+        
+        // Toggle all logs selection
+        function toggleAllLogs(checked) {
+            const checkboxes = document.querySelectorAll('.log-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = checked;
+            });
+            updateSelectedCount();
+        }
+        
+        // Delete selected logs
+        async function deleteSelectedLogs() {
+            const selectedIds = getSelectedLogIds();
+            
+            if (selectedIds.length === 0) {
+                alert('No hay logs seleccionados');
+                return;
+            }
+            
+            if (!confirm(`¿Estás seguro de que quieres eliminar ${selectedIds.length} logs seleccionados? Esta acción no se puede deshacer.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/admin/api/logs', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ ids: selectedIds })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert(result.message);
+                    // Reload logs to update the display
+                    loadLogs();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error deleting selected logs:', error);
+                alert('Error al eliminar los logs seleccionados');
+            }
         }
         
         // Load chats
@@ -1285,6 +1490,96 @@
             }
         }
         
+        // Load security config
+        async function loadSecurityConfig() {
+            try {
+                const response = await fetch('/admin/api/security-config');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderSecurityConfig(data.config);
+                } else {
+                    document.getElementById('security-config-status').innerHTML = '<div class="empty-state">Error al cargar configuración de seguridad</div>';
+                }
+            } catch (error) {
+                console.error('Error loading security config:', error);
+                document.getElementById('security-config-status').innerHTML = '<div class="empty-state">Error de conexión</div>';
+            }
+        }
+        
+        // Render security config
+        function renderSecurityConfig(config) {
+            const html = `
+                <div style="background: #e8f5e8; padding: 1rem; border-radius: 4px; border-left: 3px solid #27ae60;">
+                    <strong>📊 Configuración Actual:</strong><br>
+                    <strong>Máximo de intentos:</strong> ${config.maxLoginAttempts}<br>
+                    <strong>Duración del bloqueo:</strong> ${config.blockDurationMinutes} minutos<br>
+                    ${config.lastUpdated ? `<small>Última actualización: ${new Date(config.lastUpdated).toLocaleString()}</small>` : ''}
+                    ${config.updatedBy ? `<small> por ${config.updatedBy}</small>` : ''}
+                </div>
+            `;
+            
+            document.getElementById('security-config-status').innerHTML = html;
+            
+            // Update form values
+            document.getElementById('max-login-attempts').value = config.maxLoginAttempts;
+            document.getElementById('block-duration').value = config.blockDurationMinutes;
+        }
+        
+        // Save security config
+        async function saveSecurityConfig() {
+            const maxLoginAttempts = parseInt(document.getElementById('max-login-attempts').value);
+            const blockDurationMinutes = parseInt(document.getElementById('block-duration').value);
+            
+            // Validate inputs
+            if (maxLoginAttempts < 1 || maxLoginAttempts > 10) {
+                alert('El máximo de intentos debe estar entre 1 y 10');
+                return;
+            }
+            
+            if (blockDurationMinutes < 5 || blockDurationMinutes > 1440) {
+                alert('La duración del bloqueo debe estar entre 5 minutos y 24 horas');
+                return;
+            }
+            
+            if (!confirm('¿Estás seguro de que quieres actualizar la configuración de seguridad?')) {
+                return;
+            }
+            
+            const button = document.getElementById('save-security-config-btn');
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ Guardando...';
+            button.disabled = true;
+            
+            try {
+                const response = await fetch('/admin/api/security-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        maxLoginAttempts: maxLoginAttempts,
+                        blockDurationMinutes: blockDurationMinutes
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Configuración actualizada correctamente');
+                    renderSecurityConfig(data.config);
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error saving security config:', error);
+                alert('❌ Error de conexión al guardar la configuración');
+            } finally {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+        
         // Load maintenance status
         async function loadMaintenanceStatus() {
             try {
@@ -1399,6 +1694,67 @@
             } catch (error) {
                 console.error('Error toggling maintenance mode:', error);
                 alert('Error al cambiar modo de mantenimiento');
+            }
+        }
+        
+        // Delete specific log
+        async function deleteLog(logId) {
+            if (!confirm('¿Estás seguro de que quieres eliminar este log? Esta acción no se puede deshacer.')) {
+                return;
+            }
+            
+            const logRow = document.getElementById(`log-row-${logId}`);
+            const deleteButton = logRow.querySelector('button');
+            const originalContent = deleteButton.innerHTML;
+            
+            // Show loading state
+            deleteButton.innerHTML = '⏳';
+            deleteButton.disabled = true;
+            
+            try {
+                const response = await fetch(`/admin/api/logs/${logId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Remove the row from the table with animation
+                    logRow.style.transition = 'opacity 0.3s ease';
+                    logRow.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        logRow.remove();
+                        
+                        // Check if table is now empty
+                        const tbody = document.querySelector('#logs-container tbody');
+                        if (tbody && tbody.children.length === 0) {
+                            document.getElementById('logs-container').innerHTML = '<div class="empty-state">No se encontraron logs</div>';
+                        }
+                    }, 300);
+                    
+                    // Show success message briefly
+                    const tempMessage = document.createElement('div');
+                    tempMessage.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #27ae60; color: white; padding: 1rem; border-radius: 4px; z-index: 1000;';
+                    tempMessage.textContent = '✅ Log eliminado exitosamente';
+                    document.body.appendChild(tempMessage);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(tempMessage);
+                    }, 3000);
+                } else {
+                    alert('❌ Error: ' + data.message);
+                    deleteButton.innerHTML = originalContent;
+                    deleteButton.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error deleting log:', error);
+                alert('❌ Error de conexión al eliminar el log');
+                deleteButton.innerHTML = originalContent;
+                deleteButton.disabled = false;
             }
         }
         
