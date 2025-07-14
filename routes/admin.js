@@ -341,14 +341,7 @@ router.delete('/api/logs/:id', isAdmin, async (req, res) => {
             });
         }
         
-        // Log the deletion action
-        const { logDataUpdate, getRealIP } = require('../utils/logger');
-        const adminUser = req.session.user ? req.session.user.username : 'admin';
-        await logDataUpdate(
-            adminUser,
-            getRealIP(req),
-            `Log eliminado - ID: ${id}, Tipo: ${result.type}, Usuario: ${result.username || 'N/A'}`
-        );
+        // Don't log the deletion of logs to avoid clutter
         
         res.json({
             success: true,
@@ -389,14 +382,7 @@ router.delete('/api/logs', isAdmin, async (req, res) => {
         
         const result = await Log.deleteMany({ _id: { $in: ids } });
         
-        // Log the deletion action
-        const { logDataUpdate, getRealIP } = require('../utils/logger');
-        const adminUser = req.session.user ? req.session.user.username : 'admin';
-        await logDataUpdate(
-            adminUser,
-            getRealIP(req),
-            `Eliminación múltiple de logs - ${result.deletedCount} logs eliminados. IDs: ${ids.join(', ')}`
-        );
+        // Don't log the deletion of logs to avoid clutter
         
         res.json({
             success: true,
