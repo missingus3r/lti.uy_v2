@@ -10,6 +10,8 @@
     <link rel="shortcut icon" type="image/png" href="/images/icon_lti_v2.png">
     
     <link rel="stylesheet" href="/css/styles.css">
+    <!-- Intro.js styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js@8.3.2/introjs.css">
     <style>
         .progress-container {
             margin-top: 30px;
@@ -1028,7 +1030,7 @@
                     headerRow.setAttribute('data-semester', semester);
                     const headerCell = headerRow.insertCell(0);
                     headerCell.colSpan = 5;
-                    headerCell.innerHTML = `<span class="semester-arrow">▼</span>Semestre ${semester}`;
+                    headerCell.innerHTML = `<span class="semester-arrow collapsed">▶</span>Semestre ${semester}`;
                     
                     // Add click event to toggle semester
                     headerRow.onclick = function() {
@@ -1038,7 +1040,7 @@
                     // Add subjects for this semester
                     subjectsBySemester[semester].forEach(planSubject => {
                         const row = tbody.insertRow();
-                        row.className = `semester-${semester}-subject semester-subjects`;
+                        row.className = `semester-${semester}-subject semester-subjects collapsed`;
                         
                         // Find if this subject is in the student's progress
                         let studentSubject = null;
@@ -1235,25 +1237,45 @@
             // Get collapsed states from localStorage
             const collapsedStates = JSON.parse(localStorage.getItem('semesterCollapsedStates') || '{}');
             
-            // Apply saved states to each semester
-            Object.keys(collapsedStates).forEach(semester => {
-                if (collapsedStates[semester] === true) {
-                    const headerRow = document.querySelector(`tr[data-semester="${semester}"]`);
-                    if (headerRow) {
-                        const subjectRows = document.querySelectorAll(`.semester-${semester}-subject`);
-                        const arrow = headerRow.querySelector('.semester-arrow');
-                        
-                        if (arrow) {
-                            arrow.classList.add('collapsed');
-                            arrow.textContent = '▶';
-                        }
-                        
-                        subjectRows.forEach(row => {
-                            row.classList.add('collapsed');
-                        });
+            // Get all semester headers
+            const allHeaders = document.querySelectorAll('.semester-header[data-semester]');
+            
+            allHeaders.forEach(headerRow => {
+                const semester = headerRow.getAttribute('data-semester');
+                const subjectRows = document.querySelectorAll(`.semester-${semester}-subject`);
+                const arrow = headerRow.querySelector('.semester-arrow');
+                
+                // Check if we have a saved state for this semester
+                const isCollapsed = collapsedStates.hasOwnProperty(semester) ? collapsedStates[semester] : true; // Default to collapsed for new users
+                
+                if (isCollapsed) {
+                    // Collapse this semester
+                    if (arrow) {
+                        arrow.classList.add('collapsed');
+                        arrow.textContent = '▶';
                     }
+                    subjectRows.forEach(row => {
+                        row.classList.add('collapsed');
+                    });
+                } else {
+                    // Expand this semester
+                    if (arrow) {
+                        arrow.classList.remove('collapsed');
+                        arrow.textContent = '▼';
+                    }
+                    subjectRows.forEach(row => {
+                        row.classList.remove('collapsed');
+                    });
+                }
+                
+                // Save the state if it wasn't already saved (for new semesters)
+                if (!collapsedStates.hasOwnProperty(semester)) {
+                    collapsedStates[semester] = true; // Default to collapsed
                 }
             });
+            
+            // Update localStorage with any new semesters
+            localStorage.setItem('semesterCollapsedStates', JSON.stringify(collapsedStates));
         }
         
         function showPasswordModal() {
@@ -1370,6 +1392,131 @@
                 });
             }
         });
+    </script>
+    
+    <!-- Intro.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/intro.js@8.3.2/intro.min.js"></script>
+    
+    <!-- Tour Implementation -->
+    <script>
+        // Function to check if this is the user's first visit
+        function isFirstVisit() {
+            const tourCompleted = localStorage.getItem('welcomeTourCompleted');
+            return !tourCompleted;
+        }
+        
+        // Function to initialize the tour
+        function initializeTour() {
+            const intro = introJs();
+            
+            // Configure tour settings
+            intro.setOptions({
+                steps: [
+                    {
+                        intro: `¡Bienvenido a LTI.UY! 👋<br><br>
+                               Esta plataforma te ayuda a hacer seguimiento de tu progreso académico en la Licenciatura en Tecnologías de la Información.<br><br>
+                               Te mostraré las principales funcionalidades.`,
+                        position: 'center'
+                    },
+                    {
+                        element: '.progress-bar-container',
+                        intro: 'Esta barra muestra tu progreso académico actual. Se actualiza automáticamente con los créditos que has obtenido.',
+                        position: 'bottom'
+                    },
+                    {
+                        element: '.progress-stats',
+                        intro: 'Aquí puedes ver el detalle de tus créditos: obtenidos, requeridos y restantes para completar la carrera.',
+                        position: 'top'
+                    },
+                    {
+                        element: '#planSelect',
+                        intro: 'Puedes cambiar entre diferentes planes de carrera si necesitas comparar requisitos.',
+                        position: 'bottom'
+                    },
+                    {
+                        element: '#refreshButton',
+                        intro: 'Usa este botón para actualizar manualmente tus datos académicos. Tienes 2 actualizaciones disponibles por día.',
+                        position: 'left'
+                    },
+                    {
+                        element: '#assistant-toggle',
+                        intro: `¡Este es tu asistente de IA! 🤖<br><br>
+                               Puedes preguntarle sobre:<br>
+                               • Tu progreso académico<br>
+                               • Información sobre materias<br>
+                               • Requisitos de la carrera<br>
+                               • Cualquier duda sobre UTEC`,
+                        position: 'left'
+                    }
+                ],
+                showStepNumbers: true,
+                showBullets: true,
+                showProgress: true,
+                scrollToElement: true,
+                exitOnOverlayClick: false,
+                nextLabel: 'Siguiente →',
+                prevLabel: '← Anterior',
+                skipLabel: 'X',
+                doneLabel: 'Finalizar'
+            });
+            
+            // Handle tour completion
+            intro.oncomplete(function() {
+                localStorage.setItem('welcomeTourCompleted', 'true');
+                // Open AI assistant after tour
+                document.getElementById('assistant-toggle').click();
+            });
+            
+            // Handle tour exit
+            intro.onexit(function() {
+                localStorage.setItem('welcomeTourCompleted', 'true');
+            });
+            
+            // Start the tour with a small delay to ensure page is fully loaded
+            setTimeout(() => {
+                intro.start();
+            }, 1000);
+        }
+        
+        // Check if we should show the tour when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for academic data to load before starting tour
+            const checkDataAndStartTour = setInterval(() => {
+                const progressContent = document.getElementById('progressContent');
+                const subjectsSection = document.getElementById('subjectsSection');
+                
+                // Check if data is loaded and visible
+                if (progressContent && progressContent.style.display !== 'none' && 
+                    subjectsSection && subjectsSection.style.display !== 'none' &&
+                    isFirstVisit()) {
+                    clearInterval(checkDataAndStartTour);
+                    initializeTour();
+                }
+            }, 500);
+            
+            // Stop checking after 30 seconds
+            setTimeout(() => {
+                clearInterval(checkDataAndStartTour);
+            }, 30000);
+        });
+        
+        // Add a button to restart the tour manually
+        function addTourButton() {
+            const welcomeHeader = document.querySelector('.welcome-header');
+            if (welcomeHeader) {
+                const tourButton = document.createElement('button');
+                tourButton.innerHTML = '🎯 Ver Tour Guiado';
+                tourButton.className = 'btn btn-primary';
+                tourButton.style.cssText = 'margin-top: 15px; background: linear-gradient(135deg, #00ade0, #00c7ff); border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; color: white;';
+                tourButton.onclick = function() {
+                    initializeTour();
+                };
+                welcomeHeader.appendChild(tourButton);
+            }
+        }
+        
+        // Add tour button when DOM is ready
+        document.addEventListener('DOMContentLoaded', addTourButton);
     </script>
     
     <script src="/js/main.js"></script>
