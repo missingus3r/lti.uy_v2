@@ -56,7 +56,7 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
                 <a href="#services" onclick="closeMobileMenu()" role="menuitem">Servicios</a>
                 <a href="#faq" onclick="closeMobileMenu()" role="menuitem">FAQ</a>
                 <a href="/news" onclick="closeMobileMenu()" role="menuitem">Novedades</a>
-                <a href="/login" class="btn btn-primary nav-login-btn" onclick="closeMobileMenu()" role="menuitem" title="Acceder a tu cuenta de estudiante">Iniciar Sesión</a>
+                <a href="#" class="btn btn-primary nav-login-btn" onclick="showLoginDisabledModal(); closeMobileMenu()" role="menuitem" title="Acceder a tu cuenta de estudiante">Iniciar Sesión</a>
             </div>
         </div>
     </nav>
@@ -72,6 +72,16 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
                 </header>
             </div>
         </section>
+
+    <section class="utec-clarification">
+        <div class="container">
+            <div class="clarification-box">
+                <h3 style="color: var(--utec-primary); margin-bottom: 15px;">¿Este sitio pertenece a la UTEC?</h3>
+                <p>No, este proyecto es realizado por estudiantes recibidos de la UTEC, para estudiantes de la UTEC. 😊</p>
+                <p>Creado por los Licenciados en Tecnologías de la Información <a href="https://www.linkedin.com/in/bruno-silveira-730107a7/" target="_blank" style="color: var(--utec-secondary); text-decoration: none;">Bruno Silveira</a>, <a href="https://www.linkedin.com/in/jose-faller-ba6229117/" target="_blank" style="color: var(--utec-secondary); text-decoration: none;">José Faller</a> y <a href="https://www.linkedin.com/in/mariano-collazo-6773a9219/" target="_blank" style="color: var(--utec-secondary); text-decoration: none;">Mariano Collazo</a> como proyecto final de carrera.</p>
+            </div>
+        </div>
+    </section>
 
     <section id="features" class="features">
         <div class="container">
@@ -571,17 +581,6 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
 
                 <div class="faq-item">
                     <div class="faq-question" onclick="toggleFAQ(this)">
-                        <span>¿Este sitio pertenece a la UTEC?</span>
-                        <span class="faq-arrow">+</span>
-                    </div>
-                    <div class="faq-answer">
-                        <p>No, este proyecto es realizado por estudiantes recibidos de la UTEC, para estudiantes de la UTEC. 😊</p>
-                        <p>Creado por los Licenciados en Tecnologías de la Información <a href="https://www.linkedin.com/in/bruno-silveira-730107a7/" target="_blank" style="color: var(--utec-secondary); text-decoration: none;">Bruno Silveira</a>, <a href="https://www.linkedin.com/in/jose-faller-ba6229117/" target="_blank" style="color: var(--utec-secondary); text-decoration: none;">José Faller</a> y <a href="https://www.linkedin.com/in/mariano-collazo-6773a9219/" target="_blank" style="color: var(--utec-secondary); text-decoration: none;">Mariano Collazo</a> como proyecto final de carrera.</p>
-                    </div>
-                </div>
-
-                <div class="faq-item">
-                    <div class="faq-question" onclick="toggleFAQ(this)">
                         <span>Falta material de las materias</span>
                         <span class="faq-arrow">+</span>
                     </div>
@@ -653,7 +652,35 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
 
     <%- include('partials/footer', { showTerms: true }) %>
 
+    <!-- Login Disabled Modal -->
+    <div id="loginDisabledModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeLoginDisabledModal()">&times;</span>
+            <h3 style="color: var(--utec-primary); margin-bottom: 20px;">Login Desactivado</h3>
+            <p>El login esta desactivado temporalmente debido a cambios en las paginas de UTEC. Si queres tener acceso podes enviarnos un mail a <a href="mailto:bru94.sil@gmail.com?subject=Solicitud%20login%20LTI.UY">bru94.sil@gmail.com</a></p>
+            <button class="btn btn-secondary" onclick="closeLoginDisabledModal()" style="margin-top: 20px;">Cerrar</button>
+        </div>
+    </div>
+
     <style>
+        .utec-clarification {
+            background-color: #fff;
+            padding: 40px 0 20px 0;
+        }
+
+        .clarification-box {
+            background-color: #f0f9ff;
+            border-left: 5px solid var(--utec-primary);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .clarification-box p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
         /* Mobile Navigation Styles */
         .mobile-menu-toggle {
             background: none;
@@ -1060,6 +1087,24 @@ Asi que estas interesado en el código? Mandanos un mensaje por aca: https://www
     </style>
 
     <script>
+        function showLoginDisabledModal() {
+            document.getElementById('loginDisabledModal').style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeLoginDisabledModal() {
+            document.getElementById('loginDisabledModal').style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('loginDisabledModal');
+            if (event.target == modal) {
+                closeLoginDisabledModal();
+            }
+        }
+
         // Mobile menu functionality
         function toggleMobileMenu() {
             const navLinks = document.getElementById('navLinks');

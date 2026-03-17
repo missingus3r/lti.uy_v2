@@ -156,7 +156,7 @@
             <h3>¿Qué puedes hacer?</h3>
             <ul>
                 <li>🏠 <a href="/">Volver al inicio</a> (siempre es seguro)</li>
-                <li>🔐 <a href="/login">Iniciar sesión</a> (si ya tienes cuenta)</li>
+                <li>🔐 <a href="#" onclick="showLoginDisabledModal()">Iniciar sesión</a> (si ya tienes cuenta)</li>
                 <li>☕ Tomarte un café y repensar tu vida</li>
                 <li>📚 Ir a estudiar (ya que estás aquí...)</li>
             </ul>
@@ -169,5 +169,32 @@
             <br><small>(Ok, esto es mentira, pero suena bien)</small></p>
         </div>
     </div>
+
+    <!-- Login Disabled Modal -->
+    <div id="loginDisabledModal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; overflow:auto; background-color:rgba(0,0,0,0.4);">
+        <div class="modal-content" style="background-color:#fefefe; margin:15% auto; padding:20px; border:1px solid #888; width:80%; max-width:500px; border-radius:8px; text-align:center; color: #333;">
+            <span class="modal-close" onclick="closeLoginDisabledModal()" style="color:#aaa; float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
+            <h3 style="color: var(--utec-primary); margin-bottom: 20px;">Login Desactivado</h3>
+            <p>El login esta desactivado temporalmente debido a cambios en las paginas de UTEC. Si queres tener acceso podes enviarnos un mail a bru94.sil arroba gmail.com</p>
+            <button class="btn btn-secondary" onclick="closeLoginDisabledModal()" style="margin-top: 20px;">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        function showLoginDisabledModal() {
+            document.getElementById('loginDisabledModal').style.display = 'block';
+        }
+
+        function closeLoginDisabledModal() {
+            document.getElementById('loginDisabledModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('loginDisabledModal');
+            if (event.target == modal) {
+                closeLoginDisabledModal();
+            }
+        }
+    </script>
 </body>
 </html>
